@@ -9,18 +9,6 @@ defmodule Baud.ModbusTest do
   #Using Modbus Master
   #COM8 USB-RS485 Adapter
   #10.77.0.107:8899 USR-WIFI232-630
-  #TCP Read 1 from coil at 0
-  00,05,00,00,00,06,01,01,00,00,00,01
-  00,05,00,00,00,04,01,01,01,01
-  #RTU Read 1 from coil at 0
-  01,01,00,00,00,01,FD,CA
-  01,01,01,01,90,48
-  #RTU Write 0 to coil at 3200
-  01,01,0C,80,00,01,FF,72
-  01,01,01,00,51,88
-  #TCP Write 0 to coil at 3200
-  00,04,00,00,00,06,01,05,0C,80,00,00
-  00,04,00,00,00,06,01,05,0C,80,00,00
   """
   test "modbus echo" do
     exec = :code.priv_dir(:baud) ++ '/native/baud'
@@ -34,21 +22,24 @@ defmodule Baud.ModbusTest do
     assert_receive {_, {:data, "1"}}, 400
 
     Enum.each 1..@reps, fn _x ->
+      #read 1 from coil at 0
       true = Port.command(port0, <<00,05,00,00,00,06,01,01,00,00,00,01>>)
-      assert_receive {p1, {:data, echo0}}, 400
-      assert {port1, <<01,01,00,00,00,01,0xFD,0xCA>>} == {p1, echo0}
+      assert_receive {^port1, {:data, <<01,01,00,00,00,01,0xFD,0xCA>>}}, 400
       true = Port.command(port1, <<01,01,01,01,0x90,0x48>>)
-      assert_receive {p0, {:data, echo1}}, 800
-      assert {port0, <<00,05,00,00,00,04,01,01,01,01>>} == {p0, echo1}
+      assert_receive {^port0, {:data, <<00,05,00,00,00,04,01,01,01,01>>}}, 800
     end
 
     Enum.each 1..@reps, fn _x ->
+      #write 0 to coil at 3200
       true = Port.command(port0, <<00,04,00,00,00,06,01,05,0x0C,0x80,00,00>>)
-      assert_receive {p1, {:data, echo0}}, 400
-      assert {port1, <<01,05,0x0C,0x80,00,00,0xCF,0x72>>} == {p1, echo0}
+      assert_receive {^port1, {:data, <<01,05,0x0C,0x80,00,00,0xCF,0x72>>}}, 400
       true = Port.command(port1, <<01,05,0x0C,0x80,00,00,0xCF,0x72>>)
-      assert_receive {p0, {:data, echo1}}, 800
-      assert {port0, <<00,04,00,00,00,06,01,05,0x0C,0x80,00,00>>} == {p0, echo1}
+      assert_receive {^port0, {:data, <<00,04,00,00,00,06,01,05,0x0C,0x80,00,00>>}}, 800
+      #write 1 to coil at 3200
+      true = Port.command(port0, <<00,04,00,00,00,06,01,05,0x0C,0x80,0xFF,00>>)
+      assert_receive {^port1, {:data, <<01,05,0x0C,0x80,0xFF,00,0x8E,0x82>>}}, 400
+      true = Port.command(port1, <<01,05,0x0C,0x80,0xFF,00,0x8E,0x82>>)
+      assert_receive {^port0, {:data, <<00,04,00,00,00,06,01,05,0x0C,0x80,0xFF,00>>}}, 800
     end
 
     true = Port.close(port0)

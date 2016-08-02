@@ -1,6 +1,20 @@
 defmodule Baud do
   @moduledoc """
-    Server module.
+    Standard serial port module.
+
+    ```elixir
+    ["COM1", "ttyUSB0", "cu.usbserial-FTYHQD9MA"] = Baud.Enum.list()
+    #Do not prepend /dev/ to the port name
+    {:ok, pid} = Baud.start_link([portname: "cu.usbserial-FTYHQD9MA"])
+    :ok = Baud.write(pid, "Hello!\\n");
+    {:ok, "Hi!\\n"} = Baud.read(pid);
+    {:ok, "Hi!\\n"} = Baud.readln(pid, 400);
+    {:ok, 24} = Baud.available(pid);
+    :ok = Baud.wait4data(pid, 400)
+    :ok = Baud.discard(pid)
+    :ok = Baud.echo(pid)
+    :ok = Baud.close(pid)
+    ```
   """
   use GenServer
 
@@ -141,14 +155,14 @@ defmodule Baud do
     {:ok, port}
   end
 
-  def terminate(reason, state) do
-    :io.format "terminate ~p ~p ~p ~n", [__MODULE__, reason, state]
+  def terminate(_reason, _state) do
+    #:io.format "terminate ~p ~p ~p ~n", [__MODULE__, reason, state]
   end
 
   def handle_call(:echo, _from, port) do
     true = Port.command(port, "e+")
     receive do
-      {_port, {:data, "+"}} -> {:reply, :ok, port}
+      {^port, {:data, "+"}} -> {:reply, :ok, port}
     after
       @to -> {:stop, {:echo, :timeout}, port}
     end
@@ -163,7 +177,7 @@ defmodule Baud do
   def handle_call(:read, _from, port) do
     true = Port.command(port, "r")
     receive do
-      {_port, {:data, packet}} -> {:reply, {:ok, packet}, port}
+      {^port, {:data, packet}} -> {:reply, {:ok, packet}, port}
     after
       @to -> {:stop, {:read, :timeout}, port}
     end
@@ -172,7 +186,7 @@ defmodule Baud do
   def handle_call({:readln, timeout}, _from, port) do
     true = Port.command(port, "n#{timeout}")
     receive do
-      {_port, {:data, packet}} -> {:reply, {:ok, packet}, port}
+      {^port, {:data, packet}} -> {:reply, {:ok, packet}, port}
     after
       timeout+@to -> {:stop, {:readln, :timeout}, port}
     end
@@ -181,8 +195,8 @@ defmodule Baud do
   def handle_call({:wait4data, timeout}, _from, port) do
     true = Port.command(port, "s#{timeout}")
     receive do
-      {_port, {:data, "so"}} -> {:reply, :ok, port}
-      {_port, {:data, "st"}} -> {:reply, :timeout, port}
+      {^port, {:data, "so"}} -> {:reply, :ok, port}
+      {^port, {:data, "st"}} -> {:reply, :timeout, port}
     after
       timeout+@to -> {:stop, {:wait4data, :timeout}, port}
     end
@@ -191,7 +205,7 @@ defmodule Baud do
   def handle_call(:available, _from, port) do
     true = Port.command(port, "a")
     receive do
-      {_port, {:data, "a" <> size}} -> {:reply, {:ok, int(size)}, port}
+      {^port, {:data, "a" <> size}} -> {:reply, {:ok, int(size)}, port}
     after
       @to -> {:stop, {:available, :timeout}, port}
     end
@@ -205,7 +219,7 @@ defmodule Baud do
   def handle_call(:close, _from, port) do
     true = Port.command(port, "ce+")
     receive do
-      {_port, {:data, "+"}} -> {:reply, :ok, port}
+      {^port, {:data, "+"}} -> {:reply, :ok, port}
     after
       @to -> {:stop, {:close, :timeout}, port}
     end

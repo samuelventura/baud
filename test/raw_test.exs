@@ -14,16 +14,14 @@ defmodule Baud.RawTest do
     tty1 = TestHelper.tty1()
     args1 = ["o#{tty1},115200,8N1b8i100e1lr"]
     port1 = Port.open({:spawn_executable, exec}, [:binary, packet: 2, args: args1])
-    assert_receive {_, {:data, "0"}}, 400
-    assert_receive {_, {:data, "1"}}, 400
+    assert_receive {^port0, {:data, "0"}}, 400
+    assert_receive {^port1, {:data, "1"}}, 400
 
     Enum.each 1..@reps, fn _x ->
       true = Port.command(port0, "echo0")
-      assert_receive {p1, {:data, echo0}}, 400
-      assert {port1, "echo0"} == {p1, echo0}
+      assert_receive {^port1, {:data, "echo0"}}, 400
       true = Port.command(port1, "echo1")
-      assert_receive {p0, {:data, echo1}}, 400
-      assert {port0, "echo1"} == {p0, echo1}
+      assert_receive {^port0, {:data, "echo1"}}, 400
     end
 
     true = Port.close(port0)

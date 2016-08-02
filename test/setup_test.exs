@@ -38,19 +38,18 @@ defmodule Baud.ConfigTest do
     args1 = ["o#{tty1},#{baudrate},#{bitconfig}b32i100e1"]
     port1 = Port.open({:spawn_executable, exec}, [:binary, packet: 2, args: args1])
     #wait echos to ensure ports are ready
-    assert_receive {_, {:data, "0"}}, 400
-    assert_receive {_, {:data, "1"}}, 400
+    assert_receive {^port0, {:data, "0"}}, 400
+    assert_receive {^port1, {:data, "1"}}, 400
     #write to one read from the other
     true = Port.command(port0, "w")
     true = Port.command(port0, "echo0\n")
     true = Port.command(port1, "r")
-    assert_receive {p1, {:data, echo0}}, 400
-    assert {port1, "echo0\n"} == {p1, echo0}
+    assert_receive {^port1, {:data, "echo0\n"}}, 400
     #close and wait for echos
     true = Port.command(port0, "ce0")
     true = Port.command(port1, "ce1")
-    assert_receive {_, {:data, "0"}}, 400
-    assert_receive {_, {:data, "1"}}, 400
+    assert_receive {^port0, {:data, "0"}}, 400
+    assert_receive {^port1, {:data, "1"}}, 400
     #kill the native port
     true = Port.close(port0)
     true = Port.close(port1)

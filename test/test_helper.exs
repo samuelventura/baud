@@ -1,7 +1,17 @@
 
 defmodule Baud.TestHelper do
 
-  #Use dual FTDI USB-Serial adapter ICUSB2322F with 3 wire null modem between them.
+  #USB-RS485-WE USB to RS485 Adapter
+  def tty() do
+    case :os.type() do
+      {:unix, :darwin} -> "cu.usbserial-FTVFV143"
+      {:unix, :linux} -> "ttyUSB0"
+      {:win32, :nt} -> "COM8"
+    end
+  end
+
+  #ICUSB2322F FTDI USB to dual RS232 adapter
+  #with 3 wire null modem between them
   #Shorter is #1. Larger is #2.
   def tty0() do
     case :os.type() do

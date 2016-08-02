@@ -12,7 +12,7 @@ defmodule Baud.Mixfile do
 
   def project do
     [app: :baud,
-     version: "0.1.0",
+     version: "0.2.0",
      elixir: "~> 1.3",
      compilers: [:native, :elixir, :app],
      build_embedded: Mix.env == :prod,
@@ -34,7 +34,7 @@ defmodule Baud.Mixfile do
 
   defp description do
     """
-    Serial Port for Elixir.
+    Serial port with RTU support.
     """
   end
 

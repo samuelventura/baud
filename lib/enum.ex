@@ -1,6 +1,6 @@
 defmodule Baud.Enum do
   @moduledoc """
-  Serial Port enumeration module.
+  Serial port enumeration module.
   """
 
   @dev "/dev"

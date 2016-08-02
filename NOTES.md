@@ -69,11 +69,12 @@ sudo gpasswd -a samuel dialout
 
 - See `test/test_helper.exs` for requirements. Port names are hardcoded.
 - Use dual FTDI USB-Serial adapter ICUSB2322F with 3 wire null modem between them.
+- Use USB-RS485-WE USB to RS485 Adapter to test modport RTU communications
 
 ## Miscellaneous
 
-A pairs of devices are created:
-  - `tty` requires DCD line raised or open blocks.
+A pair of devices are created:
+  - `tty` requires DCD line raised or open call blocks.
   Putting in the red null modem adapter makes baud work.
   - `cu` does not require DCD line raised
   - http://pbxbook.com/other/mac-tty.html

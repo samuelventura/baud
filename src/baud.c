@@ -195,8 +195,7 @@ void cmd_read_line(struct CMD* cmd) {
   unsigned long dl = millis() + timeout;
   while (dl > millis()) {
     while (serial_available() > 0) {
-      //FIXME this takes 100ms on mac despite asking for a single byte
-      //intercharacter timeout is applied even if there are more bytes already present
+      //FIXME interchar timeout is applied despite fetch byte by byte
       count += serial_read(buffer + count, 1);
       if (buffer[count - 1] == '\n') break;
       if (count >= context.bufsize)  break;
@@ -211,6 +210,44 @@ void cmd_available_data(struct CMD* cmd) {
   int count = serial_available();
   int length = snprintf(buffer, sizeof(buffer), "a%d", count);
   stdout_write_packet((unsigned char*)buffer, length);
+}
+
+void cmd_modbus(struct CMD* cmd) {
+  unsigned char head[4];
+  unsigned char buffer[context.bufsize];
+  int ic = stdin_read_packet(buffer, context.bufsize);
+  if (ic < 4) crash("RTU packet too short required:%d got:%d", 4, ic);
+  if (ic + 2 > context.bufsize) crash("CRC buffer overflow required:%d got:%d", ic + 2, context.bufsize);
+  for(int i=0;i<4;i++) head[i] = buffer[i];
+  //append modbus RTU CRC
+  int crc = crc16(buffer, ic);
+  buffer[ic++] = crc&0xff;
+  buffer[ic++] = (crc>>8)&0xff;
+  int oc = serial_write(buffer, ic);
+  if (ic != oc) crash("Partial write to serial expected:%d written:%d", ic, oc);
+  //wait for response
+  int is = 0;
+  unsigned long dl = millis() + 400;
+  while (1) {
+    if (millis() > dl) {
+      stdout_write_packet((unsigned char *)"me", 2);
+      return;
+    }
+    if (serial_available() > 0) {
+      is += serial_read(buffer + is, context.bufsize - is);
+      if (is >= 6) {
+        crc = crc16(buffer, is - 2);
+        int lcrc = crc&0xff;
+        int hcrc = (crc>>8)&0xff;
+        if (buffer[is-2] == lcrc && buffer[is-1] == hcrc) {
+          stdout_write_packet(buffer, is - 2);
+          return;
+        }
+      }
+      if (is >= context.bufsize) crash("Buffer overflow waiting RTU response %d %s", context.bufsize, tohex(buffer, is));
+    }
+    milli_sleep(1);
+  }
 }
 
 void process_cmd(struct CMD* cmd) {
@@ -259,6 +296,9 @@ void process_cmd(struct CMD* cmd) {
         break;
       case 'p':
         cmd_pause(cmd);
+        break;
+      case 'm':
+        cmd_modbus(cmd);
         break;
       default:
         crash("process_cmd failed at index %d invalid cmd %c", start, c);
