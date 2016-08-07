@@ -3,6 +3,9 @@ defmodule Baud.Test do
   alias Baud.TestHelper
   @reps 3
 
+  @doc """
+  Check the baud genserver API.
+  """
   test "baud test" do
     tty0 = TestHelper.tty0()
     tty1 = TestHelper.tty1()

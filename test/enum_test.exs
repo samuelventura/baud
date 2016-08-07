@@ -1,8 +1,10 @@
 defmodule Baud.Enum.Test do
   use ExUnit.Case
   alias Baud.TestHelper
-  @reps 3
 
+  @doc """
+  Check hard coded ports are enumerated.
+  """
   test "enum test" do
     tty0 = TestHelper.tty0()
     tty1 = TestHelper.tty1()

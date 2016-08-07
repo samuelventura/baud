@@ -1,6 +1,6 @@
 # baud
 
-Serial port with RTU support.
+Serial port with Modbus support.
 
 ## Installation and Usage
 
@@ -25,7 +25,11 @@ Serial port with RTU support.
   3. Use it:
 
     ```elixir
-    ["COM1", "ttyUSB0", "cu.usbserial-FTYHQD9MA"] = Baud.Enum.list()
+    alias Baud.Enum
+    ["COM1", "ttyUSB0", "cu.usbserial-FTYHQD9MA"] = Enum.list()
+    ```
+
+    ```elixir
     #Do not prepend /dev/ to the port name
     {:ok, pid} = Baud.start_link([portname: "cu.usbserial-FTYHQD9MA"])
     :ok = Baud.write(pid, "Hello!\n");
@@ -36,6 +40,13 @@ Serial port with RTU support.
     :ok = Baud.discard(pid)
     :ok = Baud.echo(pid)
     :ok = Baud.close(pid)
+    ```
+
+    ```elixir
+    alias Baud.Sock
+    #Do not prepend /dev/ to the port name. Mode defaults to :raw
+    {:ok, pid} = Sock.start_link([portname: "ttyUSB0", port: 5000])
+    :ok = Sock.stop(pid)    
     ```
 
     ```elixir    
@@ -53,17 +64,24 @@ Serial port with RTU support.
 
 ## Releases
 
-Version 0.1.0
+Version 0.3.0
 
-- [x] Cross platform native serial port (mac, win, linux)
-- [x] Modbus (tcu-rtu), raw and text loop mode (for sersock)
+- [ ] Rtu API review
+- [ ] Serial port export to socket
+- [ ] Integration with `modbus` package: rtu + sock modbus mode test
 
 Version 0.2.0
 
 - [x] Interactive RTU: read/write up to 8 coils at once
 
+Version 0.1.0
+
+- [x] Cross platform native serial port (mac, win, linux)
+- [x] Modbus (tcu-rtu), raw and text loop mode
+
 ## TODO
 
+- [ ] Implement Modbus ASCII support (no available device)
 - [ ] Implement RTU read input(s), read/write register(s)
 - [ ] Implement DTR/RTS control and CTS/DSR monitoring
 - [ ] Implement separate discard for input and output buffers
@@ -73,8 +91,7 @@ Version 0.2.0
 - [ ] Improve debugging: stderr messages are interlaced in mix test output
 - [ ] Improve debugging: dev/test/prod conditional output
 - [ ] Move from polling to overlapped on Windows
-- [ ] Research why interchar timeout is applied when reading a single byte even
-      having many already in the input buffer. Happens on MAC.
+- [ ] Research why interchar timeout is applied when reading a single byte even having many already in the input buffer. Happens on MAC.
 - [ ] Research how to bypass the 0.1s minimum granularity on posix systems
 - [ ] Research Mix unit test isolation (OS resources cleanup)
 - [ ] Research printf to embed variable sized arrays as hex strings

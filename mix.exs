@@ -29,12 +29,13 @@ defmodule Baud.Mixfile do
   defp deps do
     [
       {:ex_doc, "~> 0.12", only: :dev},
+      {:modbus, git: "https://github.com/samuelventura/modbus.git"},
     ]
   end
 
   defp description do
     """
-    Serial port with RTU support.
+    Serial port with Modbus support.
     """
   end
 

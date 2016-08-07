@@ -4,7 +4,7 @@ defmodule Baud.ModbusTest do
   @reps 3
 
   @doc """
-  Check baud works against itself in modbus+raw mode.
+  Check baud native port works against itself in modbus+raw mode.
 
   #Using Modbus Master
   #COM8 USB-RS485 Adapter

@@ -4,7 +4,7 @@ defmodule Baud.RawTest do
   @reps 3
 
   @doc """
-  Check baud works against itself in raw mode.
+  Check baud native port works against itself in raw mode.
   """
   test "raw echo" do
     exec = :code.priv_dir(:baud) ++ '/native/baud'

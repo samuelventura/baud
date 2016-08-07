@@ -4,7 +4,7 @@ defmodule Baud.TextTest do
   @reps 3
 
   @doc """
-  Check baud works against itself in text mode.
+  Check baud native port works against itself in text mode.
   """
   test "text echo" do
     exec = :code.priv_dir(:baud) ++ '/native/baud'

@@ -55,7 +55,8 @@ defmodule Baud do
     Returns `:ok`.
   """
   def stop(pid) do
-    GenServer.cast(pid, :stop)
+    #don't use :normal or the port won't be stop
+    Process.exit(pid, :stop)
   end
 
   @doc """
@@ -231,10 +232,6 @@ defmodule Baud do
 
   def handle_info({port, {:exit_status, exit_status}}, port) do
     {:stop, {:port_died, exit_status}, port}
-  end
-
-  def handle_cast(:stop, port) do
-    {:stop, :normal, port}
   end
 
   ##########################################
