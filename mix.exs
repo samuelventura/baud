@@ -35,7 +35,7 @@ defmodule Baud.Mixfile do
 
   defp description do
     """
-    Serial port with Modbus support.
+    Serial port with RTU and TCP-to-RTU support.
     """
   end
 

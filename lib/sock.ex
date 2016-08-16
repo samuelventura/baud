@@ -31,11 +31,12 @@ defmodule Baud.Sock do
   }
   ```
 
-  `mode` can be `:text`, `:modbus` or `:raw`. Text mode buffers data
-  from the serial port and forwards complete lines terminated in `\\n`. Modbus mode
-  buffers data from the serial port and forwards complete packets. Modbus also
-  translates bidirectionally from Modbus TCP to Modbus RTU. Raw mode forwards
-  data received within the packetization timeout.
+  `mode` can be `:text`, `:rtu_master`, `:rtu_slave`, `:rtu_tcpgw` or `:raw`.
+  Text mode buffers data from the serial port and forwards complete lines
+  terminated in `\\n`. RTU modes buffer data, adds or removes CRC, and
+  forwards complete packets. TCP gateway translates bidirectionally from
+  Modbus TCP to Modbus RTU. Raw mode forwards data received within the
+  packetization timeout.
 
   `ip` can be any valid IP with `{0,0,0,0}` and `{127,0,0,1}` meaning `any interface` or
   `local loop interface` respectively.
@@ -177,17 +178,21 @@ defmodule Baud.Sock do
 
   defp packtype(mode) do
     case mode do
-        :text -> :line
-        :modbus -> :raw
         :raw -> :raw
+        :text -> :line
+        :rtu_tcpgw -> :raw
+        :rtu_master -> :raw
+        :rtu_slave -> :raw
     end
   end
 
   defp flags(mode) do
     case mode do
-        :text -> "lt"
-        :modbus -> "lm"
         :raw -> "lr"
+        :text -> "lt"
+        :rtu_tcpgw -> "lg"
+        :rtu_master -> "lm"
+        :rtu_slave -> "ls"
     end
   end
 end

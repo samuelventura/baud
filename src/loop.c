@@ -21,7 +21,7 @@ void loop_text() {
   loop(loop_stdin_text, loop_serial_text, &text);
 }
 
-void loop_modbus() {
+void loop_modbus_rtu_tcpgw() {
   struct MODBUS modbus;
   unsigned char array1[context.bufsize];
   unsigned char array2[context.bufsize];
@@ -30,7 +30,31 @@ void loop_modbus() {
   modbus.serial.array = array2;
   modbus.serial.size = context.bufsize;
   modbus.packCount = -1;
-  loop(loop_stdin_modbus, loop_serial_modbus, &modbus);
+  loop(loop_stdin_rtu_tcpgw, loop_serial_rtu_tcpgw, &modbus);
+}
+
+void loop_modbus_rtu_master() {
+  struct MODBUS modbus;
+  unsigned char array1[context.bufsize];
+  unsigned char array2[context.bufsize];
+  modbus.input.array = array1;
+  modbus.input.size = context.bufsize;
+  modbus.serial.array = array2;
+  modbus.serial.size = context.bufsize;
+  modbus.packCount = -1;
+  loop(loop_stdin_rtu_master, loop_serial_rtu_master, &modbus);
+}
+
+void loop_modbus_rtu_slave() {
+  struct MODBUS modbus;
+  unsigned char array1[context.bufsize];
+  unsigned char array2[context.bufsize];
+  modbus.input.array = array1;
+  modbus.input.size = context.bufsize;
+  modbus.serial.array = array2;
+  modbus.serial.size = context.bufsize;
+  modbus.packCount = 0;
+  loop(loop_stdin_rtu_slave, loop_serial_rtu_slave, &modbus);
 }
 
 void loop_stdin_raw(void* state) {
@@ -68,7 +92,7 @@ void loop_serial_text(void* state) {
   }
 }
 
-void loop_stdin_modbus(void* state) {
+void loop_stdin_rtu_tcpgw(void* state) {
   struct MODBUS *modbus = (struct MODBUS*)state;
   int ic = stdin_read_packet(modbus->input.array, modbus->input.size);
   //calculate modbus tcp packet size
@@ -86,13 +110,14 @@ void loop_stdin_modbus(void* state) {
   if (is != oc) crash("Partial write to serial expected:%d written:%d", is, oc);
 }
 
-void loop_serial_modbus(void* state) {
+void loop_serial_rtu_tcpgw(void* state) {
   struct MODBUS *modbus = (struct MODBUS*)state;
   int ic = serial_read(modbus->serial.array, modbus->serial.size);
   //discard data if no pending response
   if (modbus->packCount >= 0) {
     for(int i=0; i<ic; i++) {
       unsigned char b = modbus->serial.array[i];
+      int pending = ic - (i + 1);
       modbus->input.array[6 + modbus->packCount++] = b;
       unsigned short crc = modbus->input.array[modbus->packCount + 6 - 1]<<8 | modbus->input.array[modbus->packCount + 6 - 2];
       // slave(1)+funct(1)+addr(2)+crc(2) = 6 as minimum rtu response size
@@ -102,13 +127,100 @@ void loop_serial_modbus(void* state) {
         modbus->input.array[5] = modbus->packCount&0xff;
         modbus->packCount += 6;
         stdout_write_packet(modbus->input.array, modbus->packCount);
-        if (ic - i - 1 > 0) crash("Extra bytes from serial processed:%d(%s) pending:%d(%s)",
-          modbus->packCount, tohex(modbus->input.array, modbus->packCount), ic - i - 1, tohex(modbus->serial.array + i + 1, ic - i - 1));
+        modbus->packCount -= 6;
+        modbus->packCount += 2;
+        if (pending > 0) crash("Extra bytes from serial processed:%d(%s) pending:%d(%s)",
+          modbus->packCount, tohex(modbus->input.array + 6, modbus->packCount), pending, tohex(modbus->serial.array + i + 1, pending));
         //disable packed processing from serial
         modbus->packCount = -1;
       }
       else if (modbus->packCount + 6 >= modbus->input.size) crash("Packet buffer overflow reading serial processed:%d(%s) pending:%d(%s)",
-        modbus->packCount, tohex(modbus->input.array, modbus->packCount), ic - i - 1, tohex(modbus->serial.array + i + 1, ic - i - 1));
+        modbus->packCount, tohex(modbus->input.array + 6, modbus->packCount), pending, tohex(modbus->serial.array + i + 1, pending));
     }
   } else crash("Discarding bytes from serial: %d(%s)", ic, tohex(modbus->serial.array, ic));
+}
+
+void loop_stdin_rtu_master(void* state) {
+  struct MODBUS *modbus = (struct MODBUS*)state;
+  int ic = stdin_read_packet(modbus->input.array, modbus->input.size);
+  if (ic + 2 > modbus->input.size) crash("CRC buffer overflow required:%d got:%d", ic + 2, modbus->input.size);
+  //append modbus RTU CRC
+  int crc = crc16(modbus->input.array, ic);
+  modbus->input.array[ic] = crc&0xff;
+  modbus->input.array[ic + 1] = (crc>>8)&0xff;
+  int is = ic + 2; //modbus rtu packet size
+  //enable and/or resets response
+  modbus->packCount = 0;
+  int oc = serial_write(modbus->input.array, is);
+  if (is != oc) crash("Partial write to serial expected:%d written:%d", is, oc);
+}
+
+void loop_serial_rtu_master(void* state) {
+  struct MODBUS *modbus = (struct MODBUS*)state;
+  int ic = serial_read(modbus->serial.array, modbus->serial.size);
+  //discard data if no pending response
+  if (modbus->packCount >= 0) {
+    for(int i=0; i<ic; i++) {
+      unsigned char b = modbus->serial.array[i];
+      int pending = ic - (i + 1);
+      modbus->input.array[modbus->packCount++] = b;
+      unsigned short crc = 0;
+      if (modbus->packCount >= 2) crc = modbus->input.array[modbus->packCount - 1]<<8 | modbus->input.array[modbus->packCount - 2];
+      // slave(1)+funct(1)+addr(2)+crc(2) = 6 as minimum rtu response size
+      if (modbus->packCount >=6 && crc == crc16(modbus->input.array, modbus->packCount - 2)) {
+        modbus->packCount -= 2;
+        stdout_write_packet(modbus->input.array, modbus->packCount);
+        modbus->packCount += 2;
+        if (pending > 0) crash("Extra bytes from serial processed:%d(%s) pending:%d(%s)",
+          modbus->packCount, tohex(modbus->input.array, modbus->packCount), pending, tohex(modbus->serial.array + i + 1, pending));
+        //disable packed processing from serial
+        modbus->packCount = -1;
+      }
+      else if (modbus->packCount + 6 >= modbus->input.size) crash("Packet buffer overflow reading serial processed:%d(%s) pending:%d(%s)",
+        modbus->packCount, tohex(modbus->input.array, modbus->packCount), pending, tohex(modbus->serial.array + i + 1, pending));
+    }
+  } else crash("Discarding bytes from serial: %d(%s)", ic, tohex(modbus->serial.array, ic));
+}
+
+
+void loop_stdin_rtu_slave(void* state) {
+  struct MODBUS *modbus = (struct MODBUS*)state;
+  int ic = stdin_read_packet(modbus->input.array, modbus->input.size);
+  //discard data if no pending response
+  if (modbus->packCount < 0) {
+    int is = ic + 2; //modbus rtu packet size
+    if (is > modbus->input.size) crash("CRC buffer overflow required:%d got:%d", is, modbus->input.size);
+    //append modbus RTU CRC
+    int crc = crc16(modbus->input.array, ic);
+    modbus->input.array[ic] = crc&0xff;
+    modbus->input.array[ic + 1] = (crc>>8)&0xff;
+    //disable packed processing from stdin
+    modbus->packCount = 0;
+    int oc = serial_write(modbus->input.array, is);
+    if (is != oc) crash("Partial write to serial expected:%d written:%d", is, oc);
+  } else crash("Discarding bytes from stdin: %d(%s)", ic, tohex(modbus->input.array, ic));
+}
+
+void loop_serial_rtu_slave(void* state) {
+  struct MODBUS *modbus = (struct MODBUS*)state;
+  int ic = serial_read(modbus->serial.array, modbus->serial.size);
+  for(int i=0; i<ic; i++) {
+    unsigned char b = modbus->serial.array[i];
+    int pending = ic - (i + 1);
+    modbus->input.array[modbus->packCount++] = b;
+    unsigned short crc = 0;
+    if (modbus->packCount >= 2) crc = modbus->input.array[modbus->packCount - 1]<<8 | modbus->input.array[modbus->packCount - 2];
+    // slave(1)+funct(1)+addr(2)+crc(2) = 6 as minimum rtu response size
+    if (modbus->packCount >=6 && crc == crc16(modbus->input.array, modbus->packCount - 2)) {
+      modbus->packCount -= 2;
+      stdout_write_packet(modbus->input.array, modbus->packCount);
+      modbus->packCount += 2;
+      if (pending > 0) crash("Extra bytes from serial processed:%d(%s) pending:%d(%s)",
+        modbus->packCount, tohex(modbus->input.array, modbus->packCount), pending, tohex(modbus->serial.array + i + 1, pending));
+      //enable and/or resets response
+      modbus->packCount = -1;
+    }
+    else if (modbus->packCount + 6 >= modbus->input.size) crash("Packet buffer overflow reading serial processed:%d(%s) pending:%d(%s)",
+      modbus->packCount, tohex(modbus->input.array, modbus->packCount), pending, tohex(modbus->serial.array + i + 1, pending));
+  }
 }

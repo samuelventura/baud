@@ -95,12 +95,18 @@ void stdout_flush();
 void loop(void (*on_stdin)(void*), void (*on_serial)(void*), void* state);
 void loop_raw();
 void loop_text();
-void loop_modbus();
+void loop_modbus_rtu_tcpgw();
+void loop_modbus_rtu_master();
+void loop_modbus_rtu_slave();
 void loop_stdin_raw(void* state);
 void loop_serial_raw(void* state);
 void loop_stdin_text(void* state);
 void loop_serial_text(void* state);
-void loop_stdin_modbus(void* state);
-void loop_serial_modbus(void* state);
+void loop_stdin_rtu_tcpgw(void* state);
+void loop_serial_rtu_tcpgw(void* state);
+void loop_stdin_rtu_master(void* state);
+void loop_serial_rtu_master(void* state);
+void loop_stdin_rtu_slave(void* state);
+void loop_serial_rtu_slave(void* state);
 
 #endif

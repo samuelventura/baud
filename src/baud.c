@@ -130,9 +130,17 @@ void cmd_start_loop(struct CMD* cmd) {
       debug("Text mode");
       loop_text();
       break;
+    case 'g':
+      debug("Modbus RTU TCP gateway mode");
+      loop_modbus_rtu_tcpgw();
+      break;
     case 'm':
-      debug("Modbus mode");
-      loop_modbus();
+      debug("Modbus RTU master mode");
+      loop_modbus_rtu_master();
+      break;
+    case 's':
+      debug("Modbus RTU slave mode");
+      loop_modbus_rtu_slave();
       break;
     default:
     crash("cmd_start_loop invalid mode %c at index %d", c, start);
@@ -173,7 +181,7 @@ void cmd_read_n_data(struct CMD* cmd) {
         if (dl < millis()) break;
         milli_sleep(1);
       }
-      stdout_write_packet(buffer, count);
+      stdout_write_packet(buffer, ic);
     }
 }
 

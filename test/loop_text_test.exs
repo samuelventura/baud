@@ -1,7 +1,6 @@
 defmodule Baud.LoopTextTest do
   use ExUnit.Case
   alias Baud.TestHelper
-  @reps 10
 
   @doc """
   Check baud native port works against itself in text mode.
@@ -16,14 +15,12 @@ defmodule Baud.LoopTextTest do
     assert_receive {^port0, {:data, "0"}}, 400
     :ok = Baud.discard(pid1)
 
-    Enum.each 1..@reps, fn _x ->
-      true = Port.command(port0, "echo0")
-      true = Port.command(port0, "echo0\n")
-      {:ok, "echo0echo0\n"} = Baud.read(pid1, 11, 400)
-      :ok = Baud.write(pid1, "echo1")
-      :ok = Baud.write(pid1, "echo1\n")
-      assert_receive {^port0, {:data, "echo1echo1\n"}}, 400
-    end
+    true = Port.command(port0, "echo0")
+    true = Port.command(port0, "echo0\n")
+    {:ok, "echo0echo0\n"} = Baud.read(pid1, 11, 400)
+    :ok = Baud.write(pid1, "echo1")
+    :ok = Baud.write(pid1, "echo1\n")
+    assert_receive {^port0, {:data, "echo1echo1\n"}}, 400
 
     true = Port.close(port0)
     :ok = Baud.close(pid1)

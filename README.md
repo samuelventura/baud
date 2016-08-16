@@ -55,7 +55,7 @@ Serial port with RTU and TCP-to-RTU support.
     ```elixir
     alias Baud.Sock
     #Do not prepend /dev/ to the port name.
-    {:ok, pid} = Sock.start_link([portname: "ttyUSB0", port: 5000, mode: modbus])
+    {:ok, pid} = Sock.start_link([portname: "ttyUSB0", port: 5000, mode: :rtu_tcpgw])
     #modbus TCP commands sent to 127.0.0.1:5000 will be forwarded as RTU to serial port
     :ok = Sock.stop(pid)    
     ```
@@ -74,6 +74,8 @@ Serial port with RTU and TCP-to-RTU support.
 
 Version 0.3.0
 
+- [ ] Integration test script and panel
+- [x] RTU master, slave, and tcpgw loop modes
 - [x] Serial port export to socket in raw, text, and modbus mode
 - [x] RTU API matched to `modbus` package (1,2,3,4,5,6,15,16)
 - [x] Improved timeout handling for shorter test times
