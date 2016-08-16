@@ -1,32 +1,27 @@
-defmodule Baud.RawTest do
+defmodule Baud.LoopRawTest do
   use ExUnit.Case
   alias Baud.TestHelper
-  @reps 3
+  @reps 4
 
-  @doc """
-  Check baud native port works against itself in raw mode.
-  """
   test "raw echo" do
     exec = :code.priv_dir(:baud) ++ '/native/baud'
     tty0 = TestHelper.tty0()
-    args0 = ["o#{tty0},115200,8N1b8i100e0lr"]
+    args0 = ["o#{tty0},115200,8N1b8i100fde0lr"]
     port0 = Port.open({:spawn_executable, exec}, [:binary, packet: 2, args: args0])
     tty1 = TestHelper.tty1()
-    args1 = ["o#{tty1},115200,8N1b8i100e1lr"]
-    port1 = Port.open({:spawn_executable, exec}, [:binary, packet: 2, args: args1])
+    {:ok, pid1} = Baud.start_link([portname: tty1])
     assert_receive {^port0, {:data, "0"}}, 400
-    assert_receive {^port1, {:data, "1"}}, 400
+    :ok = Baud.discard(pid1)
 
     Enum.each 1..@reps, fn _x ->
       true = Port.command(port0, "echo0")
-      assert_receive {^port1, {:data, "echo0"}}, 400
-      true = Port.command(port1, "echo1")
+      {:ok, "echo0"} = Baud.read(pid1, 5, 400)
+      :ok = Baud.write(pid1, "echo1")
       assert_receive {^port0, {:data, "echo1"}}, 400
     end
 
     true = Port.close(port0)
-    true = Port.close(port1)
-    :timer.sleep(200)
+    :ok = Baud.close(pid1)
   end
 
 end

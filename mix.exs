@@ -12,7 +12,7 @@ defmodule Baud.Mixfile do
 
   def project do
     [app: :baud,
-     version: "0.2.0",
+     version: "0.3.0",
      elixir: "~> 1.3",
      compilers: [:native, :elixir, :app],
      build_embedded: Mix.env == :prod,
@@ -28,8 +28,8 @@ defmodule Baud.Mixfile do
 
   defp deps do
     [
-      {:ex_doc, "~> 0.12", only: :dev},
       {:modbus, git: "https://github.com/samuelventura/modbus.git"},
+      {:ex_doc, "~> 0.12", only: :dev},
     ]
   end
 

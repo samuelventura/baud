@@ -46,29 +46,28 @@ Serial port with Modbus support.
     alias Baud.Sock
     #Do not prepend /dev/ to the port name. Mode defaults to :raw
     {:ok, pid} = Sock.start_link([portname: "ttyUSB0", port: 5000])
+    #use netcat to talk to the serial port
+    #nc 127.0.0.1 5000
     :ok = Sock.stop(pid)    
     ```
 
     ```elixir    
-    alias Baud.Rtu
-    {:ok, pid} = Rtu.start_link([portname: "cu.usbserial-FTVFV143", baudrate: "57600"])
-    :ok = Rtu.wcoils(pid, 1, 3200, [0,0,0,0,0,0,0,0]);
-    :ok = Rtu.wcoil(pid, 1, 3200, 1);
-    {:ok, 1} = Rtu.rcoil(pid, 1, 3200);
-    :ok = Rtu.wcoil(pid, 1, 3203, 1);
-    {:ok, [1, 0, 0, 1]} = Rtu.rcoils(pid, 1, 3200, 4);
-    :ok = Rtu.discard(pid)
-    :ok = Rtu.echo(pid)
-    :ok = Rtu.close(pid)
+    {:ok, pid} = Baud.start_link([portname: "cu.usbserial-FTVFV143", baudrate: 57600])
+    #write 1 to coil at slave 2 address 3200
+    :ok = Baud.rtu(pid, {:wdo, 2, 3200, 1}, 400)
+    #write 0 to coil at slave 2 address 3200
+    :ok = Baud.rtu(pid, {:wdo, 2, 3200, 0}, 400)
+    #read 1 coil at slave 2 address 3200
+    {:ok, [1]} = Baud.rtu(pid, {:rdo, 2, 3200, 1}, 400)
     ```
 
 ## Releases
 
 Version 0.3.0
 
-- [ ] Rtu API review
-- [ ] Serial port export to socket
-- [ ] Integration with `modbus` package: rtu + sock modbus mode test
+- [x] Serial port export to socket
+- [x] RTU API matched to `modbus` package (1,2,3,4,5,6,15,16)
+- [x] Improved timeout handling for shorter test times
 
 Version 0.2.0
 
@@ -81,6 +80,7 @@ Version 0.1.0
 
 ## TODO
 
+- [ ] loop* tests still show data corruption when run all at once
 - [ ] Implement Modbus ASCII support (no available device)
 - [ ] Implement RTU read input(s), read/write register(s)
 - [ ] Implement DTR/RTS control and CTS/DSR monitoring

@@ -1,4 +1,4 @@
-defmodule Baud.Enum.Test do
+defmodule Baud.EnumTest do
   use ExUnit.Case
   alias Baud.TestHelper
 

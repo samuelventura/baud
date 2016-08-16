@@ -1,4 +1,4 @@
-defmodule Baud.ConfigTest do
+defmodule Baud.NativeSetupTest do
   use ExUnit.Case
   alias Baud.TestHelper
 
@@ -20,7 +20,7 @@ defmodule Baud.ConfigTest do
   previous iteration serial port to close and random failures will appear.
 
   Things like:
-  ```elixie
+  ```elixir
      Assertion with == failed
      code: {port0, "echo1"} == {p0, echo1}
      lhs:  {#Port<0.5225>, "echo1"}
@@ -35,7 +35,7 @@ defmodule Baud.ConfigTest do
     port0 = Port.open({:spawn_executable, exec}, [:binary, packet: 2, args: args0])
     tty1 = TestHelper.tty1()
     #the reading process requires a packto=100*n to be portable
-    args1 = ["o#{tty1},#{baudrate},#{bitconfig}b32i100e1"]
+    args1 = ["o#{tty1},#{baudrate},#{bitconfig}b32e1"]
     port1 = Port.open({:spawn_executable, exec}, [:binary, packet: 2, args: args1])
     #wait echos to ensure ports are ready
     assert_receive {^port0, {:data, "0"}}, 400
@@ -43,7 +43,7 @@ defmodule Baud.ConfigTest do
     #write to one read from the other
     true = Port.command(port0, "w")
     true = Port.command(port0, "echo0\n")
-    true = Port.command(port1, "r")
+    true = Port.command(port1, "r6+400")
     assert_receive {^port1, {:data, "echo0\n"}}, 400
     #close and wait for echos
     true = Port.command(port0, "ce0")

@@ -52,8 +52,8 @@ int read_digit(struct CMD* cmd) {
 }
 
 //should consume only digits and leave non digits untouch
-int read_int(struct CMD* cmd) {
-  int value = 0;
+unsigned int read_uint(struct CMD* cmd) {
+  unsigned int value = 0;
   int count = 0;
   int start = cmd->position;
   while(cmd->position < cmd->length) {
@@ -62,7 +62,7 @@ int read_int(struct CMD* cmd) {
     else break;
   }
   if (count > 0) return value;
-  crash("read_int failed at index %d", start);
+  crash("read_uint failed at index %d", start);
   return 0;
 }
 
@@ -94,13 +94,13 @@ void cmd_set_debug(struct CMD* cmd) {
 }
 
 void cmd_set_buffer_size(struct CMD* cmd) {
-  int bufsize = read_int(cmd);
+  int bufsize = read_uint(cmd);
   if (bufsize <= 0) crash("Bufsize must be positive");
   context.bufsize = bufsize;
 }
 
 void cmd_set_packet_timeout(struct CMD* cmd) {
-  int packto = read_int(cmd);
+  int packto = read_uint(cmd);
   serial_set_packet_timeout(packto);
 }
 
@@ -146,13 +146,38 @@ void cmd_write(struct CMD* cmd) {
   if (ic != oc) crash("Partial write to serial expected:%d written:%d", ic, oc);
 }
 
-void cmd_read(struct CMD* cmd) {
-  unsigned char buffer[context.bufsize];
-  int ic = serial_read(buffer, context.bufsize);
-  stdout_write_packet(buffer, ic);
+//return up to count of available data when any of the following happens:
+//1) the timeout expires 2) the count is reached
+void cmd_read_n_data(struct CMD* cmd) {
+  int count = read_uint(cmd);
+  char separator = read_char(cmd);
+  int timeout = read_uint(cmd);
+  if (count == 0) {
+    unsigned char buffer[context.bufsize];
+    int ic = serial_read(buffer, context.bufsize);
+    stdout_write_packet(buffer, ic);
+  } else {
+      int ic = 0;
+      bool done = false;
+      unsigned char buffer[count];
+      unsigned long dl = millis() + timeout;
+      while (1) {
+        while (serial_available() > 0) {
+          //interchar timeout is applied despite fetching byte by byte
+          //use only with packto=0 or expect length * packto delays
+          ic += serial_read(buffer + ic, 1);
+          if (ic >= count) done = true;
+          if (done) break;
+        }
+        if (done) break;
+        if (dl < millis()) break;
+        milli_sleep(1);
+      }
+      stdout_write_packet(buffer, count);
+    }
 }
 
-void cmd_flush(struct CMD* cmd) {
+void cmd_flush_discard_or_transmit(struct CMD* cmd) {
   int start = cmd->position;
   char c = read_char(cmd);
   switch(c) {
@@ -167,54 +192,66 @@ void cmd_flush(struct CMD* cmd) {
   }
 }
 
-void cmd_pause(struct CMD* cmd) {
-  int millis = read_int(cmd);
+void cmd_pause_millis(struct CMD* cmd) {
+  int millis = read_uint(cmd);
   debug("+pause %d", millis);
   milli_sleep(millis);
 }
 
-void cmd_wait_data(struct CMD* cmd) {
-  int timeout = read_int(cmd);
+void cmd_wait_n_data_available(struct CMD* cmd) {
+  int count = read_uint(cmd);
+  char separator = read_char(cmd);
+  int timeout = read_uint(cmd);
   unsigned long dl = millis() + timeout;
-  while (dl > millis()) {
-    if (serial_available() > 0) {
+  int available = serial_available();
+  while (1) {
+    if (available >= count) {
       stdout_write_packet((unsigned char*)"so", 2);
       return;
     }
+    if (dl < millis()) break;
     milli_sleep(1);
+    available = serial_available();
   }
+  debug("+available %d", available);
   stdout_write_packet((unsigned char*)"st", 2);
 }
 
-//return whatever has been read when a newline is found or
-//the timeout expires or the buffer is full
-void cmd_read_line(struct CMD* cmd) {
-  int count = 0;
+//return whatever is available when any of the following happens:
+//1) a newline is found 2) the timeout expires 3) the buffer is full
+void cmd_readline(struct CMD* cmd) {
+  int ic = 0;
+  bool done = false;
   unsigned char buffer[context.bufsize];
-  int timeout = read_int(cmd);
+  int timeout = read_uint(cmd);
   unsigned long dl = millis() + timeout;
-  while (dl > millis()) {
+  while (1) {
     while (serial_available() > 0) {
-      //FIXME interchar timeout is applied despite fetch byte by byte
-      count += serial_read(buffer + count, 1);
-      if (buffer[count - 1] == '\n') break;
-      if (count >= context.bufsize)  break;
+      //interchar timeout is applied despite fetching byte by byte
+      //use only with packto=0 or expect length * packto delays
+      ic += serial_read(buffer + ic, 1);
+      if (buffer[ic - 1] == '\n') done = true;
+      if (ic >= context.bufsize) done = true;
+      if (done) break;
     }
+    if (done) break;
+    if (dl < millis()) break;
     milli_sleep(1);
   }
-  stdout_write_packet(buffer, count);
+  stdout_write_packet(buffer, ic);
 }
 
-void cmd_available_data(struct CMD* cmd) {
+void cmd_count_available_data(struct CMD* cmd) {
   char buffer[12];
   int count = serial_available();
   int length = snprintf(buffer, sizeof(buffer), "a%d", count);
   stdout_write_packet((unsigned char*)buffer, length);
 }
 
-void cmd_modbus(struct CMD* cmd) {
+void cmd_modbus_rtu(struct CMD* cmd) {
   unsigned char head[4];
   unsigned char buffer[context.bufsize];
+  int timeout = read_uint(cmd);
   int ic = stdin_read_packet(buffer, context.bufsize);
   if (ic < 4) crash("RTU packet too short required:%d got:%d", 4, ic);
   if (ic + 2 > context.bufsize) crash("CRC buffer overflow required:%d got:%d", ic + 2, context.bufsize);
@@ -227,7 +264,7 @@ void cmd_modbus(struct CMD* cmd) {
   if (ic != oc) crash("Partial write to serial expected:%d written:%d", ic, oc);
   //wait for response
   int is = 0;
-  unsigned long dl = millis() + 400;
+  unsigned long dl = millis() + timeout;
   while (1) {
     if (millis() > dl) {
       stdout_write_packet((unsigned char *)"me", 2);
@@ -277,28 +314,28 @@ void process_cmd(struct CMD* cmd) {
         cmd_write(cmd);
         break;
       case 'r':
-        cmd_read(cmd);
+        cmd_read_n_data(cmd);
         break;
       case 'n':
-        cmd_read_line(cmd);
+        cmd_readline(cmd);
         break;
       case 'a':
-        cmd_available_data(cmd);
+        cmd_count_available_data(cmd);
         break;
       case 'f':
-        cmd_flush(cmd);
+        cmd_flush_discard_or_transmit(cmd);
         break;
       case 's':
-        cmd_wait_data(cmd);
+        cmd_wait_n_data_available(cmd);
         break;
       case 'c':
         cmd_close_serial(cmd);
         break;
       case 'p':
-        cmd_pause(cmd);
+        cmd_pause_millis(cmd);
         break;
       case 'm':
-        cmd_modbus(cmd);
+        cmd_modbus_rtu(cmd);
         break;
       default:
         crash("process_cmd failed at index %d invalid cmd %c", start, c);
