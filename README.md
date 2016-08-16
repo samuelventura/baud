@@ -1,6 +1,6 @@
 # baud
 
-Serial port with Modbus support.
+Serial port with RTU and TCP-to-RTU support.
 
 ## Installation and Usage
 
@@ -18,7 +18,8 @@ Serial port with Modbus support.
 
   ```bash
   #Serial port names are hard coded in test_helper.exs
-  #A couple of null modem serial ports and one RS485 to a modport rack
+  #A couple of null modem serial ports are required
+  #com0com may work on Windows but not tested yet
   mix test
   ```
 
@@ -33,10 +34,10 @@ Serial port with Modbus support.
     #Do not prepend /dev/ to the port name
     {:ok, pid} = Baud.start_link([portname: "cu.usbserial-FTYHQD9MA"])
     :ok = Baud.write(pid, "Hello!\n");
-    {:ok, "Hi!\n"} = Baud.read(pid);
+    {:ok, "Hi!\n"} = Baud.read(pid, 4, 400);
     {:ok, "Hi!\n"} = Baud.readln(pid, 400);
     {:ok, 24} = Baud.available(pid);
-    :ok = Baud.wait4data(pid, 400)
+    :ok = Baud.wait4rx(pid, 400)
     :ok = Baud.discard(pid)
     :ok = Baud.echo(pid)
     :ok = Baud.close(pid)
@@ -48,6 +49,14 @@ Serial port with Modbus support.
     {:ok, pid} = Sock.start_link([portname: "ttyUSB0", port: 5000])
     #use netcat to talk to the serial port
     #nc 127.0.0.1 5000
+    :ok = Sock.stop(pid)    
+    ```
+
+    ```elixir
+    alias Baud.Sock
+    #Do not prepend /dev/ to the port name.
+    {:ok, pid} = Sock.start_link([portname: "ttyUSB0", port: 5000, mode: modbus])
+    #modbus TCP commands sent to 127.0.0.1:5000 will be forwarded as RTU to serial port
     :ok = Sock.stop(pid)    
     ```
 
@@ -65,7 +74,7 @@ Serial port with Modbus support.
 
 Version 0.3.0
 
-- [x] Serial port export to socket
+- [x] Serial port export to socket in raw, text, and modbus mode
 - [x] RTU API matched to `modbus` package (1,2,3,4,5,6,15,16)
 - [x] Improved timeout handling for shorter test times
 
@@ -82,7 +91,6 @@ Version 0.1.0
 
 - [ ] loop* tests still show data corruption when run all at once
 - [ ] Implement Modbus ASCII support (no available device)
-- [ ] Implement RTU read input(s), read/write register(s)
 - [ ] Implement DTR/RTS control and CTS/DSR monitoring
 - [ ] Implement separate discard for input and output buffers
 - [ ] Unit test 8N1 7E1 7O1 and baud rate setup against a confirmed gauge
