@@ -17,6 +17,7 @@ defmodule Baud.Mixfile do
      compilers: [:native, :elixir, :app],
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     aliases: aliases(),
      description: description(),
      package: package(),
      deps: deps()]
@@ -47,5 +48,11 @@ defmodule Baud.Mixfile do
      licenses: ["Apache 2.0"],
      links: %{"GitHub" => "https://github.com/samuelventura/baud/",
               "Docs" => "http://samuelventura.github.io/baud/"}]
+  end
+
+  defp aliases do
+    [
+      "panel": ["run panel.exs"],
+    ]
   end
 end
