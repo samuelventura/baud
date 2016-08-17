@@ -78,6 +78,7 @@ void serial_open(char* portname, char* baudrate, char* bitconfig) {
 
   context.new.c_cflag |= CLOCAL | CREAD;
   context.new.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+  context.new.c_iflag &= ~(INLCR | ICRNL); //disable 0x0D <-> 0x0A translation in Linux
   context.new.c_iflag &= ~(IXON | IXOFF | IXANY);
   context.new.c_oflag &= ~OPOST;
 
