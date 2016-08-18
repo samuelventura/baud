@@ -8,8 +8,8 @@ defmodule Baud.ApiTest do
   test "baud test" do
     tty0 = TestHelper.tty0()
     tty1 = TestHelper.tty1()
-    {:ok, pid0} = Baud.start_link([portname: tty0])
-    {:ok, pid1} = Baud.start_link([portname: tty1])
+    {:ok, pid0} = Baud.start_link([portname: tty0, name: Atom.to_string(__MODULE__)])
+    {:ok, pid1} = Baud.start_link([portname: tty1, name: Atom.to_string(__MODULE__)])
     #:ok = Baud.debug(pid0, 1)
     #:ok = Baud.debug(pid1, 1)
 

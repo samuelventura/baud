@@ -5,10 +5,10 @@ defmodule Baud.LoopRawTest do
   test "raw echo" do
     exec = :code.priv_dir(:baud) ++ '/native/baud'
     tty0 = TestHelper.tty0()
-    args0 = ["o#{tty0},115200,8N1b8i100fde0lr"]
+    args0 = ["o#{tty0},115200,8N1b8i100fde0lr", Atom.to_string(__MODULE__)]
     port0 = Port.open({:spawn_executable, exec}, [:binary, packet: 2, args: args0])
     tty1 = TestHelper.tty1()
-    {:ok, pid1} = Baud.start_link([portname: tty1])
+    {:ok, pid1} = Baud.start_link([portname: tty1, name: Atom.to_string(__MODULE__)])
     assert_receive {^port0, {:data, "0"}}, 400
     :ok = Baud.discard(pid1)
 

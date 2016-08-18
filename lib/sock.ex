@@ -89,9 +89,9 @@ defmodule Baud.Sock do
   def init(state) do
     self = self()
     config = Enum.into(state, %{ip: {0,0,0,0}, port: 0, mode: :text, portname: "TTY",
-    baudrate: "115200", bitconfig: "8N1", bufsize: 255, packto: 0})
+    baudrate: "115200", bitconfig: "8N1", bufsize: 255, packto: 0, name: ""})
     flags = flags(config.mode)
-    args = ["o#{config.portname},#{config.baudrate},#{config.bitconfig}b#{config.bufsize}i#{config.packto}#{flags}"]
+    args = ["o#{config.portname},#{config.baudrate},#{config.bitconfig}b#{config.bufsize}i#{config.packto}#{flags}", config.name]
     spawn_link(fn -> listen(config, self) end)
     {:ok, %{port: nil, socket: nil, args: args}}
   end

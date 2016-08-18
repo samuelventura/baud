@@ -6,8 +6,8 @@ defmodule Baud.SockRtuMasterTest do
   test "rtu master mode test" do
     tty0 = TestHelper.tty0()
     tty1 = TestHelper.tty1()
-    {:ok, pid0} = Sock.start_link([portname: tty0, port: 4000, mode: :rtu_master])
-    {:ok, pid1} = Sock.start_link([portname: tty1, port: 4001, mode: :raw])
+    {:ok, pid0} = Sock.start_link([portname: tty0, port: 4000, mode: :rtu_master, name: Atom.to_string(__MODULE__)])
+    {:ok, pid1} = Sock.start_link([portname: tty1, port: 4001, mode: :raw, name: Atom.to_string(__MODULE__)])
 
     {:ok, sock0} = :gen_tcp.connect({127,0,0,1}, 4000, [:binary, packet: :raw, active: :false], 400)
     {:ok, sock1} = :gen_tcp.connect({127,0,0,1}, 4001, [:binary, packet: :raw, active: :false], 400)

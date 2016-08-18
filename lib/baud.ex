@@ -102,11 +102,11 @@ defmodule Baud do
   Returns `{:ok, data}`.
   """
   def read(pid) do
-    GenServer.call(pid, {:read, 0, 0})
+    GenServer.call(pid, {:read, 0, @to})
   end
 
   @doc """
-  Reads no more than `count` bytes from the serial port up to the `timeout`.
+  Reads `count` bytes.
 
   Returns `{:ok, data}`.
   """
@@ -115,9 +115,7 @@ defmodule Baud do
   end
 
   @doc """
-  Reads available data returning when either `\\n` is received,
-  the timeout has expired or the buffer is full. Partial lines may
-  be returned without warning so check for trailing `\\n` on received data.
+  Reads a line including its trailing `\\n`.
 
   Returns `{:ok, line}`.
   """
@@ -144,18 +142,16 @@ defmodule Baud do
   end
 
   @doc """
-  Waits for the specified `timeout` and returns `:ok` as soon
-  as there is `count` bytes available or `:timeout` if not.
+  Waits for at least `count` bytes to be available.
 
-  Returns `:ok` | `:timeout`.
+  Returns `:ok`.
   """
   def wait4rx(pid, count, timeout) do
     GenServer.call(pid, {:wait4rx, count, timeout})
   end
 
   @doc """
-  Waits for the specified `timeout` and returns `:ok` when all data
-  has been transmitted.
+  Waits for all data to be transmitted.
 
   Returns `:ok`.
   """
@@ -207,9 +203,9 @@ defmodule Baud do
   ##########################################
 
   def init(state) do
-    config = Enum.into(state, %{portname: "TTY", baudrate: "115200", bitconfig: "8N1", bufsize: 255, packto: 0})
+    config = Enum.into(state, %{portname: "TTY", baudrate: "115200", bitconfig: "8N1", bufsize: 255, packto: 0, name: ""})
     exec = :code.priv_dir(:baud) ++ '/native/baud'
-    args = ["o#{config.portname},#{config.baudrate},#{config.bitconfig}b#{config.bufsize}i#{config.packto}"]
+    args = ["o#{config.portname},#{config.baudrate},#{config.bitconfig}b#{config.bufsize}i#{config.packto}", config.name]
     port = Port.open({:spawn_executable, exec}, [:binary, :exit_status, packet: 2, args: args])
     {:ok, port}
   end
@@ -260,7 +256,7 @@ defmodule Baud do
     receive do
       {^port, {:data, packet}} -> {:reply, {:ok, packet}, port}
     after
-      timeout+@to -> {:stop, {:read, :timeout}, port}
+      timeout -> {:stop, {:read, :timeout}, port}
     end
   end
 
@@ -269,17 +265,16 @@ defmodule Baud do
     receive do
       {^port, {:data, packet}} -> {:reply, {:ok, packet}, port}
     after
-      timeout+@to -> {:stop, {:readln, :timeout}, port}
+      timeout -> {:stop, {:readln, :timeout}, port}
     end
   end
 
   def handle_call({:wait4rx, count, timeout}, _from, port) do
-    true = Port.command(port, "s#{count}+#{timeout}")
+    true = Port.command(port, "s#{count}+#{timeout}e+")
     receive do
-      {^port, {:data, "so"}} -> {:reply, :ok, port}
-      {^port, {:data, "st"}} -> {:reply, :timeout, port}
+      {^port, {:data, "+"}} -> {:reply, :ok, port}
     after
-      timeout+@to -> {:stop, {:wait4rx, :timeout}, port}
+      timeout -> {:stop, {:wait4rx, :timeout}, port}
     end
   end
 
@@ -314,10 +309,9 @@ defmodule Baud do
     true = Port.command(port, "m#{timeout}")
     true = Port.command(port, Modbus.Request.pack(cmd))
     receive do
-      {^port, {:data, "me"}} -> {:reply, :error, port}
-      {^port, {:data, response}} -> {:reply, parsertu(cmd, response), port}
+      {^port, {:data, response}} -> {:reply, parse_res(cmd, response), port}
     after
-      timeout+@to -> {:stop, {:rtu, :timeout}, port}
+      timeout -> {:stop, {:rtu, :timeout}, port}
     end
   end
 
@@ -347,7 +341,7 @@ defmodule Baud do
     val
   end
 
-  defp parsertu(cmd, response) do
+  defp parse_res(cmd, response) do
     {values, <<>>} = Modbus.Response.parse(cmd, response)
     case values do
       nil -> :ok

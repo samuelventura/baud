@@ -31,11 +31,11 @@ defmodule Baud.NativeSetupTest do
     exec = :code.priv_dir(:baud) ++ '/native/baud'
     tty0 = TestHelper.tty0()
     #the writing process requires no packto
-    args0 = ["o#{tty0},#{baudrate},#{bitconfig}b32e0"]
+    args0 = ["o#{tty0},#{baudrate},#{bitconfig}b32e0", Atom.to_string(__MODULE__)]
     port0 = Port.open({:spawn_executable, exec}, [:binary, packet: 2, args: args0])
     tty1 = TestHelper.tty1()
     #the reading process requires a packto=100*n to be portable
-    args1 = ["o#{tty1},#{baudrate},#{bitconfig}b32e1"]
+    args1 = ["o#{tty1},#{baudrate},#{bitconfig}b32e1", Atom.to_string(__MODULE__)]
     port1 = Port.open({:spawn_executable, exec}, [:binary, packet: 2, args: args1])
     #wait echos to ensure ports are ready
     assert_receive {^port0, {:data, "0"}}, 400

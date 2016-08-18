@@ -16,11 +16,11 @@ Serial port with RTU and TCP-to-RTU support.
 
   See [NOTES](NOTES.md) for platform specific instructions on setting up you development environment.
 
-  ```bash
+  ```shell
   #Serial port names are hard coded in test_helper.exs
   #A couple of null modem serial ports are required
   #com0com may work on Windows but not tested yet
-  mix test
+  ./test.sh
   ```
 
   3. Use it:
@@ -75,6 +75,7 @@ Serial port with RTU and TCP-to-RTU support.
 Version 0.3.0
 
 - [ ] Integration test script and panel
+- [x] Added test.sh to isolate tests run
 - [x] RTU master, slave, and tcpgw loop modes
 - [x] Serial port export to socket in raw, text, and modbus mode
 - [x] RTU API matched to `modbus` package (1,2,3,4,5,6,15,16)

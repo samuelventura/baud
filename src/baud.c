@@ -158,30 +158,28 @@ void cmd_write(struct CMD* cmd) {
 //1) the timeout expires 2) the count is reached
 void cmd_read_n_data(struct CMD* cmd) {
   int count = read_uint(cmd);
-  char separator = read_char(cmd);
-  int timeout = read_uint(cmd);
+  read_char(cmd);
+  int dl = millis() + read_uint(cmd);
   if (count == 0) {
     unsigned char buffer[context.bufsize];
     int ic = serial_read(buffer, context.bufsize);
     stdout_write_packet(buffer, ic);
   } else {
       int ic = 0;
-      bool done = false;
       unsigned char buffer[count];
-      unsigned long dl = millis() + timeout;
       while (1) {
         while (serial_available() > 0) {
           //interchar timeout is applied despite fetching byte by byte
           //use only with packto=0 or expect length * packto delays
           ic += serial_read(buffer + ic, 1);
-          if (ic >= count) done = true;
-          if (done) break;
+          if (ic >= count) {
+            stdout_write_packet(buffer, ic);
+            return;
+          }
         }
-        if (done) break;
-        if (dl < millis()) break;
+        if (dl < millis()) return;
         milli_sleep(1);
       }
-      stdout_write_packet(buffer, ic);
     }
 }
 
@@ -208,45 +206,39 @@ void cmd_pause_millis(struct CMD* cmd) {
 
 void cmd_wait_n_data_available(struct CMD* cmd) {
   int count = read_uint(cmd);
-  char separator = read_char(cmd);
-  int timeout = read_uint(cmd);
-  unsigned long dl = millis() + timeout;
+  read_char(cmd);
+  int dl = millis() + read_uint(cmd);
   int available = serial_available();
   while (1) {
     if (available >= count) {
-      stdout_write_packet((unsigned char*)"so", 2);
+      debug("+available %d", available);
       return;
     }
-    if (dl < millis()) break;
+    if (dl < millis()) return;
     milli_sleep(1);
     available = serial_available();
   }
-  debug("+available %d", available);
-  stdout_write_packet((unsigned char*)"st", 2);
 }
 
-//return whatever is available when any of the following happens:
-//1) a newline is found 2) the timeout expires 3) the buffer is full
+//return whatever is available when a newline is found
 void cmd_readline(struct CMD* cmd) {
   int ic = 0;
-  bool done = false;
   unsigned char buffer[context.bufsize];
-  int timeout = read_uint(cmd);
-  unsigned long dl = millis() + timeout;
+  int dl = millis() + read_uint(cmd);
   while (1) {
     while (serial_available() > 0) {
       //interchar timeout is applied despite fetching byte by byte
       //use only with packto=0 or expect length * packto delays
       ic += serial_read(buffer + ic, 1);
-      if (buffer[ic - 1] == '\n') done = true;
-      if (ic >= context.bufsize) done = true;
-      if (done) break;
+      if (buffer[ic - 1] == '\n') {
+        stdout_write_packet(buffer, ic);
+        return;
+      }
+      if (ic >= context.bufsize) crash("Readline buffer overflow %d %s", ic, buffer);
     }
-    if (done) break;
-    if (dl < millis()) break;
+    if (dl < millis()) return;
     milli_sleep(1);
   }
-  stdout_write_packet(buffer, ic);
 }
 
 void cmd_count_available_data(struct CMD* cmd) {
@@ -259,7 +251,8 @@ void cmd_count_available_data(struct CMD* cmd) {
 void cmd_modbus_rtu(struct CMD* cmd) {
   unsigned char head[4];
   unsigned char buffer[context.bufsize];
-  int timeout = read_uint(cmd);
+  read_char(cmd);
+  int dl = millis() + read_uint(cmd);
   int ic = stdin_read_packet(buffer, context.bufsize);
   if (ic < 4) crash("RTU packet too short required:%d got:%d", 4, ic);
   if (ic + 2 > context.bufsize) crash("CRC buffer overflow required:%d got:%d", ic + 2, context.bufsize);
@@ -272,12 +265,7 @@ void cmd_modbus_rtu(struct CMD* cmd) {
   if (ic != oc) crash("Partial write to serial expected:%d written:%d", ic, oc);
   //wait for response
   int is = 0;
-  unsigned long dl = millis() + timeout;
   while (1) {
-    if (millis() > dl) {
-      stdout_write_packet((unsigned char *)"me", 2);
-      return;
-    }
     if (serial_available() > 0) {
       is += serial_read(buffer + is, context.bufsize - is);
       if (is >= 6) {
@@ -291,6 +279,7 @@ void cmd_modbus_rtu(struct CMD* cmd) {
       }
       if (is >= context.bufsize) crash("Buffer overflow waiting RTU response %d %s", context.bufsize, tohex(buffer, is));
     }
+    if (dl < millis()) return;
     milli_sleep(1);
   }
 }
@@ -353,13 +342,14 @@ void process_cmd(struct CMD* cmd) {
 
 int main(int argc, char *argv[]) {
   context_init();
-  for(int i=1; i<argc; i++) {
+  //process only the first argument, let the others identify the process
+  if(argc > 1) {
     struct CMD cmd;
-    char* buffer = argv[i];
+    char* buffer = argv[1];
     cmd.buffer = buffer;
     cmd.length = strlen(buffer);
     cmd.position = 0;
-    debug("%d:%s", i, buffer);
+    debug(">%s", buffer);
     process_cmd(&cmd);
   }
   while(1) {
