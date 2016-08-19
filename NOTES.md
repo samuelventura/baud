@@ -77,6 +77,7 @@ sudo apt-get install -y nodejs
 ```
 - Setup everything else
 ```shell
+sudo apt-get install build-essential checkinstall
 sudo gpasswd -a samuel dialout
 mix deps.get
 #testing requires ttyUSB0 null modem to ttyUSB1
