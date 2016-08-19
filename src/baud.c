@@ -159,7 +159,7 @@ void cmd_write(struct CMD* cmd) {
 void cmd_read_n_data(struct CMD* cmd) {
   int count = read_uint(cmd);
   read_char(cmd);
-  int dl = millis() + read_uint(cmd);
+  unsigned long dl = millis() + read_uint(cmd);
   if (count == 0) {
     unsigned char buffer[context.bufsize];
     int ic = serial_read(buffer, context.bufsize);
@@ -207,7 +207,7 @@ void cmd_pause_millis(struct CMD* cmd) {
 void cmd_wait_n_data_available(struct CMD* cmd) {
   int count = read_uint(cmd);
   read_char(cmd);
-  int dl = millis() + read_uint(cmd);
+  unsigned long dl = millis() + read_uint(cmd);
   int available = serial_available();
   while (1) {
     if (available >= count) {
@@ -224,7 +224,7 @@ void cmd_wait_n_data_available(struct CMD* cmd) {
 void cmd_readline(struct CMD* cmd) {
   int ic = 0;
   unsigned char buffer[context.bufsize];
-  int dl = millis() + read_uint(cmd);
+  unsigned long dl = millis() + read_uint(cmd);
   while (1) {
     while (serial_available() > 0) {
       //interchar timeout is applied despite fetching byte by byte
@@ -251,8 +251,7 @@ void cmd_count_available_data(struct CMD* cmd) {
 void cmd_modbus_rtu(struct CMD* cmd) {
   unsigned char head[4];
   unsigned char buffer[context.bufsize];
-  read_char(cmd);
-  int dl = millis() + read_uint(cmd);
+  unsigned long dl = millis() + read_uint(cmd);
   int ic = stdin_read_packet(buffer, context.bufsize);
   if (ic < 4) crash("RTU packet too short required:%d got:%d", 4, ic);
   if (ic + 2 > context.bufsize) crash("CRC buffer overflow required:%d got:%d", ic + 2, context.bufsize);
@@ -280,7 +279,7 @@ void cmd_modbus_rtu(struct CMD* cmd) {
       if (is >= context.bufsize) crash("Buffer overflow waiting RTU response %d %s", context.bufsize, tohex(buffer, is));
     }
     if (dl < millis()) return;
-    milli_sleep(1);
+    milli_sleep(10);
   }
 }
 
@@ -354,7 +353,8 @@ int main(int argc, char *argv[]) {
   }
   while(1) {
     unsigned char buffer[256];
-    int ic = stdin_read_packet(buffer, sizeof(buffer));
+    int ic = stdin_read_packet(buffer, sizeof(buffer) - 1);
+    buffer[ic] = 0;
     struct CMD cmd;
     cmd.buffer = (char*)buffer;
     cmd.length = ic;
