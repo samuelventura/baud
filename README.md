@@ -8,7 +8,7 @@ Serial port with RTU and TCP-to-RTU support.
 
     ```elixir
     def deps do
-      [{:baud, "~> 0.2.0"}]
+      [{:baud, "~> 0.3.0"}]
     end
     ```
 
@@ -74,7 +74,7 @@ Serial port with RTU and TCP-to-RTU support.
 
 Version 0.3.0
 
-- [ ] Integration test script and panel
+- [x] Integration test script and modport panel
 - [x] Added test.sh to isolate tests run
 - [x] RTU master, slave, and tcpgw loop modes
 - [x] Serial port export to socket in raw, text, and modbus mode
