@@ -7,69 +7,87 @@ in Linux, Mac and Windows 7 (both 32 and 64 bits) respectively
 
 `:os.type()` returns:
 
-  - `{:unix, :darwin}` in MacPro OS X El Capitan
-  - `{:unix, :linux}` in Ubuntu 16.04 64x (OTP from ubuntu repos)
-  - `{:unix, :linux}` in Ubuntu 16.04 32x (OTP from ubuntu repos)
-  - `{:win32, :nt}` in Windows 7 32x con OTP 32x
-  - `{:win32, :nt}` in Windows 7 64x con OTP 64x
+- `{:unix, :darwin}` in MacPro OS X El Capitan
+- `{:unix, :linux}` in Ubuntu 16.04 64x (OTP from ubuntu repos)
+- `{:unix, :linux}` in Ubuntu 16.04 32x (OTP from ubuntu repos)
+- `{:win32, :nt}` in Windows 7 32x con OTP 32x
+- `{:win32, :nt}` in Windows 7 64x con OTP 64x
 
-## Windows setup
+## Windows 64 Development
 
-Install Elixir
-```bash
+- Install Elixir + Erlang
+```shell
 #Web installer asks to download and install the OTP if not found
 https://repo.hex.pm/elixir-websetup.exe
 ```
-
-Install MSYS2
-```bash
-#Install msys2-{x86_64,i686}-20160205.exe from https://msys2.github.io/
-#Default installation folder is C:\msys{32,64}
-#Install gcc and make from the msys2 console:
-pacman -S mingw-w64-{x86_64,i686}-gcc
+- Install msys2-x86_64-20160205.exe from https://msys2.github.io/. Default installation folder is C:\msys64
+- Using pacman install gcc, make, and git
+```shell
+pacman -S mingw-w64-x86_64-gcc
 pacman -S make
-#Add C:\msys{32,64}\mingw{32,64}\bin to PATH (turn gcc visible)
-#Add C:\msys{32,64}\usr\bin to PATH (turn make and other utils visible)
-#Notice that 64 bit systems use x86_64 and 32 bit systems use i686
+pacman -S git
 ```
-With the *PATH* exports above `mix` can run both form *cmd* and from *msys2 console*.
-Running from *cmd* triggers the **Windows application crash report dialog** when the native port crashes.
-
-## MAC setup
-**Expect machine crashes due to serial drivers.**
-
-Install Elixir
-```bash
-brew install elixir
+- Add C:\msys64\mingw64\bin to PATH (turn gcc visible)
+- Add C:\msys64\usr\bin to PATH (turn make and other utils visible)
+- Install node-v6.4.0-x64.msi
+```shell
 mix deps.get
-mix test
+npm install
+npm install bower -g
+bower install
+#testing requires COM5 null modem to COM6
+./test.sh
+mix phoenix.server
+#go to http://localhost:4000/
 ```
-Join the wheel group
-```bash
+
+With the above *PATH* exports `mix` can run both form *cmd* and from *msys2 console*. Running from *cmd* triggers the **Windows application crash report dialog** when the native port crashes.
+
+## OSX Development (El Capitan)
+
+*Expect intermittent test failures because of data corruption and failure to recognize FTDI adapters if unplugged while open. OSX also allows opening multiple times the same port and that screws the tests if not properly isolated.*
+
+- Install erlang, elixir, and node
+```shell
+brew install elixir erlang node
+```
+- Setup everything else
+```shell
 sudo dscl . append /Groups/wheel GroupMembership samuel
-```
-
-## Ubuntu 16 setup
-
-Install Elixir
-```bash
-wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
-sudo dpkg -i erlang-solutions_1.0_all.deb
-sudo apt-get install elixir
 mix deps.get
-mix test
+#testing requires a couple of null modem serial ports
+#serial port names are hardcoded in test/test_helper.exs
+./test.sh
 ```
 
-Join the dialout group
-```bash
+## Ubuntu 16.04 64 Development
+
+*Strange launch errors were corrected by deleting node_modules and run npm install again.*
+
+- Install elixir+erlang
+```shell
+wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb && sudo dpkg -i erlang-solutions_1.0_all.deb
+sudo apt-get update
+sudo apt-get install elixir
+```
+- Install node
+```shell
+curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+- Setup everything else
+```shell
 sudo gpasswd -a samuel dialout
+mix deps.get
+#testing requires ttyUSB0 null modem to ttyUSB1
+./test.sh
 ```
 
 ## Testing
 
-- See `test/test_helper.exs` for requirements. Port names are hardcoded.
+- See `test/test_helper.exs` for requirements. Port names are hardcoded there.
 - Use dual FTDI USB-Serial adapter ICUSB2322F with 3 wire null modem between them.
-- Use USB-RS485-WE USB to RS485 Adapter to test modport RTU communications
+- Use USB-RS485-WE USB to RS485 Adapter to test modport RTU communications. Launch with `mix panel`.
 
 ## Miscellaneous
 

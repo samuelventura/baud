@@ -14,7 +14,7 @@ Serial port with RTU and TCP-to-RTU support.
 
   2. Build & test it:
 
-  See [NOTES](NOTES.md) for platform specific instructions on setting up you development environment.
+  See [NOTES](NOTES.md) for platform specific instructions on setting up your development environment.
 
   ```shell
   #Serial port names are hard coded in test_helper.exs
