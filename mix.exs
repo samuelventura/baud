@@ -52,7 +52,7 @@ defmodule Baud.Mixfile do
 
   defp aliases do
     [
-      "panel": ["run panel.exs"],
+      "modport": ["run modport.exs"],
     ]
   end
 end
