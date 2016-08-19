@@ -279,7 +279,7 @@ void cmd_modbus_rtu(struct CMD* cmd) {
       if (is >= context.bufsize) crash("Buffer overflow waiting RTU response %d %s", context.bufsize, tohex(buffer, is));
     }
     if (dl < millis()) return;
-    milli_sleep(10);
+    milli_sleep(1);
   }
 }
 
