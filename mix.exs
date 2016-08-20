@@ -24,7 +24,7 @@ defmodule Baud.Mixfile do
   end
 
   def application do
-    []
+    [applications: [:modbus]]
   end
 
   defp deps do
