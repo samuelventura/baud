@@ -1,5 +1,7 @@
 # Baud
 
+Serial port with Modbus support.
+
 ## Platform detection
 
 `uname` returns Linux, Darwin, and MSYS_NT-6.1

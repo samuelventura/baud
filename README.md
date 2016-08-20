@@ -1,6 +1,18 @@
 # baud
 
-Serial port with RTU and TCP-to-RTU support.
+Serial port with Modbus support.
+
+Basic Modbus support:
+
+- **Interactice RTU**: RTU commands are send interactively.
+
+Low level advanced Modbus support:
+
+- **RTU TCP Gateway Loop**: Modbus TCP requests received by the native port are translated to RTU and forwarded to serial port. Responses are translated back from RTU to TCP.
+- **RTU Master Loop**: Modbus RTU requests received by the native port are padded with CRC and forwarded to serial port. Responses are checked and unpadded back.
+- **RTU Slave Loop**: Modbus RTU requests received by the native port port are checked and unpadded from CRC and forwarded to socket. Responses are padded and forwarded back.
+
+Some of these modes of operation feature samples below. See the unit tests for more usage samples.
 
 ## Installation and Usage
 
@@ -8,7 +20,7 @@ Serial port with RTU and TCP-to-RTU support.
 
     ```elixir
     def deps do
-      [{:baud, "~> 0.3.0"}]
+      [{:baud, "~> 0.4.0"}]
     end
     ```
 
@@ -23,25 +35,68 @@ Serial port with RTU and TCP-to-RTU support.
   ./test.sh
   ```
 
-  3. Use it:
+  3. Use it to enumerate serial ports
 
     ```elixir
     alias Baud.Enum
-    ["COM1", "ttyUSB0", "cu.usbserial-FTYHQD9MA"] = Enum.list()
+    ["COM1", "ttyUSB0", "cu.usbserial-FTVFV143"] = Enum.list()
     ```
+
+  4. Use it to interact with your serial port
 
     ```elixir
     #Do not prepend /dev/ to the port name
+    #Try this with a loopback
     {:ok, pid} = Baud.start_link([portname: "cu.usbserial-FTYHQD9MA"])
-    :ok = Baud.write(pid, "Hello!\n");
-    {:ok, "Hi!\n"} = Baud.read(pid, 4, 400);
-    {:ok, "Hi!\n"} = Baud.readln(pid, 400);
-    {:ok, 24} = Baud.available(pid);
-    :ok = Baud.wait4rx(pid, 400)
+    #Send data
+    :ok = Baud.write(pid, "Hello");
+    #Wait data is transmitted
+    :ok = Baud.wait4tx(pid, 400)
+    #Wait at least 5 bytes are available
+    :ok = Baud.wait4rx(pid, 5, 400)
+    #Check at least 5 bytes are available
+    {:ok, 5} = Baud.available(pid);
+    #Read 4 bytes of data
+    {:ok, "Hell"} = Baud.read(pid, 4, 400);
+    #Read all available data
+    {:ok, "o"} = Baud.read(pid);
+    #Send more data
+    :ok = Baud.write(pid, "World!\n...");
+    #Wait at least 1 byte is available
+    :ok = Baud.wait4rx(pid, 1, 400)
+    #Read all data up to first newline
+    {:ok, "World!\n"} = Baud.readln(pid, 400);
+    #Discard the trailing ...
     :ok = Baud.discard(pid)
+    #Check nothing is available
+    {:ok, 0} = Baud.available(pid);
+    #Check the native port is responding
     :ok = Baud.echo(pid)
+    #Close the native serial port
     :ok = Baud.close(pid)
+    #Stop the server
+    :ok = Baud.stop(pid)
     ```
+
+  5. Use it to interact with your **RTU** devices.
+
+    ```elixir    
+    {:ok, pid} = Baud.start_link([portname: "cu.usbserial-FTVFV143", baudrate: 57600])
+    #force 0 to coil at slave 1 address 3000
+    :ok = Baud.rtu(pid, {:fc, 1, 3000, 0}, 400)
+    #read 0 from coil at slave 1 address 3000
+    {:ok, [0]} = Baud.rtu(pid, {:rc, 1, 3000, 1}, 400)
+    #force 10 to coils at slave 1 address 3000 to 3001
+    :ok = Baud.rtu(pid, {:fc, 1, 3000, [1, 0]}, 400)
+    #read 10 from coils at slave 1 address 3000 to 3001
+    {:ok, [1, 0]} = Baud.rtu(pid, {:rc, 1, 3000, 2}, 400)
+    #preset 55AA to holding register at slave 1 address 3300
+    :ok = Baud.rtu(pid, {:phr, 1, 3300, 0x55AA}, 400)
+    #read 55AA from holding register at slave 1 address 3300 to 3301
+    {:ok, [0x55AA]} = Baud.rtu(pid, {:rhr, 1, 3300, 1}, 400)
+    ```
+
+  6. Use it to export your serial port to a socket in **raw** mode with no buffering so that the socket (being faster) receives bytes from the serial port (being slower) as they arrive unless a packetization timeout is configured.
 
     ```elixir
     alias Baud.Sock
@@ -52,6 +107,19 @@ Serial port with RTU and TCP-to-RTU support.
     :ok = Sock.stop(pid)    
     ```
 
+  7. Use it to export your serial port to a socket in **text** mode with input buffering up the a newline at the serial port level to avoid to many context switches between Erlang and the native port due to the differences of socket and serial port speed.
+
+    ```elixir
+    alias Baud.Sock
+    #Do not prepend /dev/ to the port name.
+    {:ok, pid} = Sock.start_link([portname: "ttyUSB0", port: 5000, mode: :text])
+    #use netcat to talk to the serial port
+    #nc 127.0.0.1 5000
+    :ok = Sock.stop(pid)    
+    ```
+
+  8. Use it to export your serial port to a socket in **tcp gateway** mode where TCP received in socket is translated back and forth to RTU on serial port.
+
     ```elixir
     alias Baud.Sock
     #Do not prepend /dev/ to the port name.
@@ -60,21 +128,17 @@ Serial port with RTU and TCP-to-RTU support.
     :ok = Sock.stop(pid)    
     ```
 
-    ```elixir    
-    {:ok, pid} = Baud.start_link([portname: "cu.usbserial-FTVFV143", baudrate: 57600])
-    #write 1 to coil at slave 2 address 3200
-    :ok = Baud.rtu(pid, {:wdo, 2, 3200, 1}, 400)
-    #write 0 to coil at slave 2 address 3200
-    :ok = Baud.rtu(pid, {:wdo, 2, 3200, 0}, 400)
-    #read 1 coil at slave 2 address 3200
-    {:ok, [1]} = Baud.rtu(pid, {:rdo, 2, 3200, 1}, 400)
-    ```
-
 ## Releases
+
+Version 0.4.0
+
+- [x] Added sample scripts (1 y 2)
+- [x] Improved documentation
+- [x] Update to modbus 0.2.0 (refactoring required)
 
 Version 0.3.0
 
-- [x] Integration test script and modport panel
+- [x] Integration test script for modport
 - [x] Added test.sh to isolate tests run
 - [x] RTU master, slave, and tcpgw loop modes
 - [x] Serial port export to socket in raw, text, and modbus mode

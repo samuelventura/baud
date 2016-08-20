@@ -1,19 +1,41 @@
 defmodule Baud do
   @moduledoc """
-    Standard serial port module.
+    Serial port module.
 
     ```elixir
-    ["COM1", "ttyUSB0", "cu.usbserial-FTYHQD9MA"] = Baud.Enum.list()
+    alias Baud.Enum
+    ["COM1", "ttyUSB0", "cu.usbserial-FTVFV143"] = Enum.list()
     #Do not prepend /dev/ to the port name
+    #Try this with a loopback
     {:ok, pid} = Baud.start_link([portname: "cu.usbserial-FTYHQD9MA"])
-    :ok = Baud.write(pid, "Hello!\\n");
-    {:ok, "Hi!\\n"} = Baud.read(pid);
-    {:ok, "Hi!\\n"} = Baud.readln(pid, 400);
-    {:ok, 24} = Baud.available(pid);
-    :ok = Baud.wait4rx(pid, 400)
+    #Send data
+    :ok = Baud.write(pid, "Hello");
+    #Wait data is transmitted
+    :ok = Baud.wait4tx(pid, 400)
+    #Wait at least 5 bytes are available
+    :ok = Baud.wait4rx(pid, 5, 400)
+    #Check at least 5 bytes are available
+    {:ok, 5} = Baud.available(pid);
+    #Read 4 bytes of data
+    {:ok, "Hell"} = Baud.read(pid, 4, 400);
+    #Read all available data
+    {:ok, "o"} = Baud.read(pid);
+    #Send more data
+    :ok = Baud.write(pid, "World!\\n...");
+    #Wait at least 1 byte is available
+    :ok = Baud.wait4rx(pid, 1, 400)
+    #Read all data up to first newline
+    {:ok, "World!\\n"} = Baud.readln(pid, 400);
+    #Discard the trailing ...
     :ok = Baud.discard(pid)
+    #Check nothing is available
+    {:ok, 0} = Baud.available(pid);
+    #Check the native port is responding
     :ok = Baud.echo(pid)
+    #Close the native serial port
     :ok = Baud.close(pid)
+    #Stop the server
+    :ok = Baud.stop(pid)
     ```
   """
   use GenServer
@@ -51,7 +73,7 @@ defmodule Baud do
   @to 400
 
   @doc """
-    Stops the GenServer with :normal.
+    Stops the GenServer.
 
     Returns `:ok`.
   """
@@ -162,17 +184,34 @@ defmodule Baud do
   @doc """
   Sends an RTU command where `cmd` is formatted according to `modbus` package.
 
-  Returns `{:ok, response}` where response is formatted
-  according to `modbus` package.
+  `cmd` is one of:
+
+  - `{:rc, slave, address, count}` read count coils.
+  - `{:ri, slave, address, count}` read count inputs.
+  - `{:rhr, slave, address, count}` read count holding registers.
+  - `{:rir, slave, address, count}` read count input registers.
+  - `{:fc, slave, address, value}` force single coil.
+  - `{:phr, slave, address, value}` preset single holding register.
+  - `{:fc, slave, address, values}` force multiple coils.
+  - `{:phr, slave, address, values}` preset multiple holding registers.
+
+  Returns `:ok | {:ok, [values]}`.
 
   ## Example:
   ```
-  #write 1 to coil at slave 2 address 3200
-  :ok = Baud.rtu(pid, {:wdo, 2, 3200, 1}, 400)
-  #write 0 to coil at slave 2 address 3200
-  :ok = Baud.rtu(pid, {:wdo, 2, 3200, 0}, 400)
-  #read 1 coil at slave 2 address 3200
-  {:ok, [1]} = Baud.rtu(pid, {:rdo, 2, 3200, 1}, 400)
+  {:ok, pid} = Baud.start_link([portname: "cu.usbserial-FTVFV143", baudrate: 57600])
+  #force 0 to coil at slave 1 address 3000
+  :ok = Baud.rtu(pid, {:fc, 1, 3000, 0}, 400)
+  #read 0 from coil at slave 1 address 3000
+  {:ok, [0]} = Baud.rtu(pid, {:rc, 1, 3000, 1}, 400)
+  #force 10 to coils at slave 1 address 3000 to 3001
+  :ok = Baud.rtu(pid, {:fc, 1, 3000, [1, 0]}, 400)
+  #read 10 from coils at slave 1 address 3000 to 3001
+  {:ok, [1, 0]} = Baud.rtu(pid, {:rc, 1, 3000, 2}, 400)
+  #preset 55AA to holding register at slave 1 address 3300
+  :ok = Baud.rtu(pid, {:phr, 1, 3300, 0x55AA}, 400)
+  #read 55AA from holding register at slave 1 address 3300 to 3301
+  {:ok, [0x55AA]} = Baud.rtu(pid, {:rhr, 1, 3300, 1}, 400)
   ```
   """
   def rtu(pid, cmd, timeout) do
