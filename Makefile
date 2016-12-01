@@ -1,3 +1,8 @@
+SRC=$(wildcard src/*.c)
+
+CFLAGS += -std=c99 -D_GNU_SOURCE
+CC ?= $(CROSSCOMPILER)gcc
+
 UNAME := $(shell uname)
 
 ifeq ($(UNAME),MSYS_NT-6.1)
@@ -8,11 +13,18 @@ else
 	SOURCES = src/baud-posix.c src/baud.c src/util.c src/loop.c
 endif
 
+OBJ=$(SOURCES:.c=.o)
+
+.PHONY: all clean
+
 all: $(TARGET)
 
-$(TARGET): src/*
+%.o: %.c
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+$(TARGET): $(OBJ)
 	mkdir -p priv/native
-	gcc -o $(TARGET) $(SOURCES)
+	$(CC) $^ -o $@
 
 clean:
-	rm -f priv/native/*
+	rm -f priv/native/* src/*.o
