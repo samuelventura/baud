@@ -1,6 +1,6 @@
 UNAME := $(shell uname)
 
-ifeq ($(UNAME),MSYS_NT-6.1)
+ifneq (,$(findstring MSYS_NT,$(UNAME)))
 	TARGET	= priv/native/baud.exe
 	SOURCES	= src/baud-msys2.c src/baud.c src/util.c src/loop.c
 else

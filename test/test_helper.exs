@@ -17,7 +17,7 @@ defmodule Baud.TestHelper do
     case :os.type() do
       {:unix, :darwin} -> "cu.usbserial-FTYHQD9MA"
       {:unix, :linux} -> "ttyUSB0"
-      {:win32, :nt} -> "COM5"
+      {:win32, :nt} -> "COM12"
     end
   end
 
@@ -25,7 +25,7 @@ defmodule Baud.TestHelper do
     case :os.type() do
       {:unix, :darwin} -> "cu.usbserial-FTYHQD9MB"
       {:unix, :linux} -> "ttyUSB1"
-      {:win32, :nt} -> "COM6"
+      {:win32, :nt} -> "COM13"
     end
   end
 

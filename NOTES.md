@@ -4,43 +4,39 @@ Serial port with Modbus support.
 
 ## Platform detection
 
-`uname` returns Linux, Darwin, and MSYS_NT-6.1
-in Linux, Mac and Windows 7 (both 32 and 64 bits) respectively
+`uname` returns Linux, Darwin, MSYS_NT-6.1, and MSYS_NT-10.0
+in Linux, Mac, Windows 7 (both 32 and 64 bits) and Windows 10 respectively
 
 `:os.type()` returns:
 
 - `{:unix, :darwin}` in MacPro OS X El Capitan
 - `{:unix, :linux}` in Ubuntu 16.04 64x (OTP from ubuntu repos)
 - `{:unix, :linux}` in Ubuntu 16.04 32x (OTP from ubuntu repos)
-- `{:win32, :nt}` in Windows 7 32x con OTP 32x
-- `{:win32, :nt}` in Windows 7 64x con OTP 64x
+- `{:win32, :nt}` in Windows 7 32x with OTP 32x
+- `{:win32, :nt}` in Windows 7 64x with OTP 64x
+- `{:win32, :nt}` in Windows 10 64x with OTP 64x
 
 ## Windows 64 Development
 
-- Install Elixir + Erlang
+- Install Elixir + Erlang from Web Installer
 ```shell
 #Web installer asks to download and install the OTP if not found
 https://repo.hex.pm/elixir-websetup.exe
 ```
 - Install msys2-x86_64-20160205.exe from https://msys2.github.io/. Default installation folder is C:\msys64
-- Using pacman install gcc, make, and git
+- Using pacman install gcc and make from within the msys2 console
 ```shell
 pacman -S mingw-w64-x86_64-gcc
 pacman -S make
-pacman -S git
 ```
 - Add C:\msys64\mingw64\bin to PATH (turn gcc visible)
 - Add C:\msys64\usr\bin to PATH (turn make and other utils visible)
-- Install node-v6.4.0-x64.msi
+- Compile and test from the Windows CMD
 ```shell
 mix deps.get
-npm install
-npm install bower -g
-bower install
+mix compile
 #testing requires COM5 null modem to COM6
-./test.sh
-mix phoenix.server
-#go to http://localhost:4000/
+bash test.sh
 ```
 
 With the above *PATH* exports `mix` can run both form *cmd* and from *msys2 console*. Running from *cmd* triggers the **Windows application crash report dialog** when the native port crashes.
@@ -90,7 +86,7 @@ mix deps.get
 
 - See `test/test_helper.exs` for requirements. Port names are hardcoded there.
 - Use dual FTDI USB-Serial adapter ICUSB2322F with 3 wire null modem between them.
-- Use USB-RS485-WE USB to RS485 Adapter to test modport RTU communications. Launch with `mix panel`.
+- Use USB-RS485-WE USB to RS485 Adapter to test modport RTU communications. Launch with `mix modport`.
 
 ## Miscellaneous
 
