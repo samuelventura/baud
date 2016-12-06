@@ -40,7 +40,7 @@ bash test.sh
 ```
 
 * *Windows 7*: With the above *PATH* exports `mix` can run both form *cmd* and from *msys2 console*. Running from *cmd* triggers the **Windows application crash report dialog** when the native port crashes.
-* *Windows 10*: With the above *PATH* exports `mix` can only be run from *Windows cmd*.
+* *Windows 10*: With the above *PATH* exports `mix` can only be run from *Windows cmd*. Environment var *MSYS2_PATH_TYPE=inherit* is required for msys2 console to access mix.
 
 ## OSX Development (El Capitan)
 
