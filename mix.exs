@@ -12,7 +12,7 @@ defmodule Baud.Mixfile do
 
   def project do
     [app: :baud,
-     version: "0.4.0",
+     version: "0.4.1",
      elixir: "~> 1.3",
      compilers: [:native, :elixir, :app],
      build_embedded: Mix.env == :prod,

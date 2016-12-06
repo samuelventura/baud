@@ -20,7 +20,7 @@ Some of these modes of operation feature samples below. See the unit tests for m
 
     ```elixir
     def deps do
-      [{:baud, "~> 0.4.0"}]
+      [{:baud, "~> 0.4.1"}]
     end
     ```
 
@@ -129,6 +129,10 @@ Some of these modes of operation feature samples below. See the unit tests for m
     ```
 
 ## Releases
+
+Version 0.4.1
+
+- [x] Updated Makefile for Windows 10
 
 Version 0.4.0
 
