@@ -1,12 +1,3 @@
-defmodule Mix.Tasks.Compile.Native do
-  @shortdoc "Compiles native code"
-  def run(_) do
-    0 = Mix.Shell.IO.cmd("make")
-    Mix.Project.build_structure
-    :ok
-  end
-end
-
 defmodule Baud.Mixfile do
   use Mix.Project
 
@@ -14,9 +5,10 @@ defmodule Baud.Mixfile do
     [app: :baud,
      version: "0.4.1",
      elixir: "~> 1.3",
-     compilers: [:native, :elixir, :app],
+     compilers: [:elixir_make | Mix.compilers],
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     make_clean: ["clean"],
      aliases: aliases(),
      description: description(),
      package: package(),
@@ -29,6 +21,7 @@ defmodule Baud.Mixfile do
 
   defp deps do
     [
+      {:elixir_make, "~> 0.4"},
       {:modbus, "~> 0.2.0"},
       {:ex_doc, "~> 0.12", only: :dev},
     ]
