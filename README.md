@@ -160,6 +160,7 @@ Version 0.1.0
 
 ## TODO
 
+- [ ] Split into a core package and OS dependant packages holding native code
 - [ ] loop* tests still show data corruption when run all at once
 - [ ] Implement Modbus ASCII support (no available device)
 - [ ] Implement DTR/RTS control and CTS/DSR monitoring
