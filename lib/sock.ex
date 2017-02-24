@@ -91,7 +91,7 @@ defmodule Baud.Sock do
     port = Keyword.get(params, :port, 0)
     flags = flags(mode)
     args = ["o#{portname},#{baudrate},#{bitconfig}b#{bufsize}i#{packto}#{flags}", name]
-    {:ok, listener} = :gen_tcp.listen(port, [:binary, ip: ip, packet: packtype(mode), active: false, reuseaddr: true])
+    {:ok, listener} = :gen_tcp.listen(port, [:binary, ip: ip, packet: packtype(mode), active: false])
     {:ok, {ip, port}} = :inet.sockname(listener)
     spawn_link(fn -> accept(listener, args, nil) end)
     {ip, port, name}
