@@ -160,6 +160,8 @@ Version 0.1.0
 
 ## TODO
 
+- [ ] Assess rewriting the windows native code using the win32 api
+- [ ] Assess rewriting the windows native code using c#/.net
 - [ ] Split into a core package and OS dependant packages holding native code
 - [ ] loop* tests still show data corruption when run all at once
 - [ ] Implement Modbus ASCII support (no available device)
