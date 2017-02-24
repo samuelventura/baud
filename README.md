@@ -1,6 +1,6 @@
 # baud
 
-Serial port with Modbus support.
+Serial Port with Modbus support.
 
 Basic Modbus support:
 
@@ -49,51 +49,52 @@ Some of these modes of operation feature samples below. See the unit tests for m
     #Try this with a loopback
     {:ok, pid} = Baud.start_link([portname: "cu.usbserial-FTYHQD9MA"])
     #Send data
-    :ok = Baud.write(pid, "Hello");
+    :ok = Baud.write pid, "Hello"
     #Wait data is transmitted
-    :ok = Baud.wait4tx(pid, 400)
+    :ok = Baud.wait4tx pid
     #Wait at least 5 bytes are available
-    :ok = Baud.wait4rx(pid, 5, 400)
+    :ok = Baud.wait4rx pid, 5
     #Check at least 5 bytes are available
-    {:ok, 5} = Baud.available(pid);
+    {:ok, 5} = Baud.available pid
     #Read 4 bytes of data
-    {:ok, "Hell"} = Baud.read(pid, 4, 400);
+    {:ok, "Hell"} = Baud.read pid, 4
     #Read all available data
-    {:ok, "o"} = Baud.read(pid);
+    {:ok, "o"} = Baud.read pid
     #Send more data
-    :ok = Baud.write(pid, "World!\n...");
+    :ok = Baud.write pid, "World!\n..."
     #Wait at least 1 byte is available
-    :ok = Baud.wait4rx(pid, 1, 400)
+    :ok = Baud.wait4rx pid, 1
     #Read all data up to first newline
-    {:ok, "World!\n"} = Baud.readln(pid, 400);
-    #Discard the trailing ...
-    :ok = Baud.discard(pid)
+    {:ok, "World!\n"} = Baud.readln pid
+    #Discard trailing ...
+    :ok = Baud.discard pid
     #Check nothing is available
-    {:ok, 0} = Baud.available(pid);
+    {:ok, 0} = Baud.available pid
     #Check the native port is responding
-    :ok = Baud.echo(pid)
+    :ok = Baud.echo pid
     #Close the native serial port
-    :ok = Baud.close(pid)
+    :ok = Baud.close pid
     #Stop the server
-    :ok = Baud.stop(pid)
+    :ok = Baud.stop pid
     ```
 
   5. Use it to interact with your **RTU** devices.
 
     ```elixir    
+    #rs485 usb adapter to modport
     {:ok, pid} = Baud.start_link([portname: "cu.usbserial-FTVFV143", baudrate: 57600])
     #force 0 to coil at slave 1 address 3000
-    :ok = Baud.rtu(pid, {:fc, 1, 3000, 0}, 400)
+    :ok = Baud.rtu pid, {:fc, 1, 3000, 0}
     #read 0 from coil at slave 1 address 3000
-    {:ok, [0]} = Baud.rtu(pid, {:rc, 1, 3000, 1}, 400)
+    {:ok, [0]} = Baud.rtu pid, {:rc, 1, 3000, 1}
     #force 10 to coils at slave 1 address 3000 to 3001
-    :ok = Baud.rtu(pid, {:fc, 1, 3000, [1, 0]}, 400)
+    :ok = Baud.rtu pid, {:fc, 1, 3000, [1, 0]}
     #read 10 from coils at slave 1 address 3000 to 3001
-    {:ok, [1, 0]} = Baud.rtu(pid, {:rc, 1, 3000, 2}, 400)
+    {:ok, [1, 0]} = Baud.rtu pid, {:rc, 1, 3000, 2}
     #preset 55AA to holding register at slave 1 address 3300
-    :ok = Baud.rtu(pid, {:phr, 1, 3300, 0x55AA}, 400)
+    :ok = Baud.rtu pid, {:phr, 1, 3300, 0x55AA}
     #read 55AA from holding register at slave 1 address 3300 to 3301
-    {:ok, [0x55AA]} = Baud.rtu(pid, {:rhr, 1, 3300, 1}, 400)
+    {:ok, [0x55AA]} = Baud.rtu pid, {:rhr, 1, 3300, 1}
     ```
 
   6. Use it to export your serial port to a socket in **raw** mode with no buffering so that the socket (being faster) receives bytes from the serial port (being slower) as they arrive unless a packetization timeout is configured.

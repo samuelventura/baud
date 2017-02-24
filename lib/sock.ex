@@ -4,7 +4,7 @@ defmodule Baud.Sock do
 
   A single remote socket connection is supported. Each new socket connection
   closes and replaces the previous one. Native port is open until a connection
-  is made and will be closed when the connection closes. Serial ports should
+  is made and will be closed when the connection closes. Serial port should
   be free while there is no connection.
   """
   use GenServer
@@ -68,8 +68,8 @@ defmodule Baud.Sock do
     ```
 
   """
-  def start_link(state, opts \\ []) do
-    GenServer.start_link(__MODULE__, state, opts)
+  def start_link(params, opts \\ []) do
+    GenServer.start_link(__MODULE__, params, opts)
   end
 
   @doc """
@@ -86,13 +86,21 @@ defmodule Baud.Sock do
   # GenServer Implementation
   ##########################################
 
-  def init(state) do
+  def init(params) do
     self = self()
-    config = Enum.into(state, %{ip: {0,0,0,0}, port: 0, mode: :text, portname: "TTY",
-    baudrate: "115200", bitconfig: "8N1", bufsize: 255, packto: 0, name: ""})
-    flags = flags(config.mode)
-    args = ["o#{config.portname},#{config.baudrate},#{config.bitconfig}b#{config.bufsize}i#{config.packto}#{flags}", config.name]
-    spawn_link(fn -> listen(config, self) end)
+    portname = Keyword.fetch!(params, :portname)
+    baudrate = Keyword.get(params, :baudrate, "115200")
+    bitconfig = Keyword.get(params, :bitconfig, "8N1")
+    bufsize = Keyword.get(params, :bufsize, 255)
+    packto = Keyword.get(params, :packto, 0)
+    mode = Keyword.get(params, :mode, "8N1")
+    name = Keyword.get(params, :name, :text)
+    ip = Keyword.get(params, :ip, {0,0,0,0})
+    port = Keyword.get(params, :port, 0)
+    flags = flags(mode)
+    args = ["o#{portname},#{baudrate},#{bitconfig}b#{bufsize}i#{packto}#{flags}", name]
+    {:ok, listener} = :gen_tcp.listen(port, [:binary, ip: ip, packet: packtype(mode), active: false])
+    spawn_link(fn -> accept(listener, self) end)
     {:ok, %{port: nil, socket: nil, args: args}}
   end
 
@@ -147,13 +155,6 @@ defmodule Baud.Sock do
   ##########################################
   # Socket Server Implementation
   ##########################################
-
-  defp listen(config, pid) do
-    #defered activation to ensure accept is received before first packet
-    {:ok, listener} = :gen_tcp.listen(config.port, [:binary, ip: config.ip,
-      packet: packtype(config.mode), active: false, reuseaddr: true])
-    accept(listener, pid)
-  end
 
   defp accept(listener, pid) do
     {:ok, socket} = :gen_tcp.accept(listener)

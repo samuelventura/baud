@@ -1,5 +1,4 @@
 defmodule Mix.Tasks.Compile.Native do
-  @shortdoc "Compiles native code"
   def run(_) do
     0 = Mix.Shell.IO.cmd("make")
     Mix.Project.build_structure
@@ -12,7 +11,7 @@ defmodule Baud.Mixfile do
 
   def project do
     [app: :baud,
-     version: "0.4.1",
+     version: "0.4.2",
      elixir: "~> 1.3",
      compilers: [:native, :elixir, :app],
      build_embedded: Mix.env == :prod,
@@ -29,13 +28,13 @@ defmodule Baud.Mixfile do
 
   defp deps do
     [
-      {:modbus, "~> 0.2.0"},
+      {:modbus, "~> 0.3.0"},
       {:ex_doc, "~> 0.12", only: :dev},
     ]
   end
 
   defp description do
-    "Serial port with Modbus support."
+    "Serial Port with Modbus support."
   end
 
   defp package do
