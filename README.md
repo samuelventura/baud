@@ -160,6 +160,9 @@ Version 0.1.0
 
 ## TODO
 
+- [ ] Support udoo neo
+- [ ] Support beaglebone black
+- [ ] Support raspberry pi 3 B
 - [ ] Assess rewriting the windows native code using the win32 api
 - [ ] Assess rewriting the windows native code using c#/.net
 - [ ] Split into a core package and OS dependant packages holding native code
