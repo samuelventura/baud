@@ -2,7 +2,7 @@
 tty = case :os.type() do
   {:unix, :darwin} -> "cu.usbserial-FTVFV143"
   {:unix, :linux} -> "ttyUSB0"
-  {:win32, :nt} -> "COM8"
+  {:win32, :nt} -> "COM10"
 end
 
 {:ok, pid} = Baud.start_link([portname: tty, baudrate: 57600])

@@ -1,6 +1,12 @@
+tty = case :os.type() do
+  {:unix, :darwin} -> "cu.usbserial-FTYHQD9MA"
+  {:unix, :linux} -> "ttyUSB0"
+  {:win32, :nt} -> "COM12"
+end
+
 #Do not prepend /dev/ to the port name
 #Try this with a loopback
-{:ok, pid} = Baud.start_link([portname: "cu.usbserial-FTYHQD9MA"])
+{:ok, pid} = Baud.start_link([portname: tty])
 #Send data
 :ok = Baud.write pid, "Hello"
 #Wait data is transmitted

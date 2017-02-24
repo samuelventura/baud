@@ -312,7 +312,7 @@ defmodule Baud do
     name = Keyword.get(params, :name, "")
     exec = :code.priv_dir(:baud) ++ '/native/baud'
     args = ["o#{portname},#{baudrate},#{bitconfig}b#{bufsize}i#{packto}", name]
-    Port.open({:spawn_executable, exec}, [:binary, :exit_status, packet: 2, args: args])
+    Port.open({:spawn_executable, exec}, [:binary, packet: 2, args: args])
   end
 
   defp int(str) do
