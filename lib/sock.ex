@@ -1,4 +1,5 @@
 defmodule Baud.Sock do
+  import Supervisor.Spec
   @moduledoc """
   Server module to export individual serial ports thru a socket.
 
@@ -7,14 +8,13 @@ defmodule Baud.Sock do
   is made and will be closed when the connection closes. Serial port should
   be free while there is no connection.
   """
-  use GenServer
 
   ##########################################
   # Public API
   ##########################################
 
   @doc """
-  Starts the GenServer.
+  Starts the listening socket server.
 
   `state` is  a keyword list to be merged with the following defaults:
 
@@ -68,25 +68,18 @@ defmodule Baud.Sock do
 
   """
   def start_link(params, opts \\ []) do
-    GenServer.start_link(__MODULE__, params, opts)
+    Agent.start_link(fn -> init(params) end, opts)
   end
 
-  @doc """
-    Stops the GenServer.
-
-    Returns `:ok`.
-  """
   def stop(pid) do
-    #don't use :normal or the listener won't be stop
-    Process.exit(pid, :stop)
+    Agent.stop(pid)
   end
 
-  ##########################################
-  # GenServer Implementation
-  ##########################################
+  def id(pid) do
+    Agent.get(pid, fn {ip, port, name} -> {:ok, ip, port, name} end)
+  end
 
-  def init(params) do
-    self = self()
+  defp init(params) do
     portname = Keyword.fetch!(params, :portname)
     baudrate = Keyword.get(params, :baudrate, "115200")
     bitconfig = Keyword.get(params, :bitconfig, "8N1")
@@ -100,81 +93,49 @@ defmodule Baud.Sock do
     args = ["o#{portname},#{baudrate},#{bitconfig}b#{bufsize}i#{packto}#{flags}", name]
     {:ok, listener} = :gen_tcp.listen(port, [:binary, ip: ip, packet: packtype(mode), active: false, reuseaddr: true])
     {:ok, {ip, port}} = :inet.sockname(listener)
-    spawn_link(fn -> accept(listener, self) end)
-    {:ok, %{port: nil, socket: nil, args: args, id: {ip, port}}}
+    spawn_link(fn -> accept(listener, args, nil) end)
+    {ip, port, name}
   end
 
-  def terminate(_reason, _state) do
-    #:io.format "terminate ~p ~p ~p ~n", [__MODULE__, reason, state]
+  defp accept(listener, args, nil) do
+    spec = worker(__MODULE__, [], restart: :temporary, function: :start_child)
+    {:ok, sup} = Supervisor.start_link([spec], strategy: :simple_one_for_one)
+    accept(listener, args, sup, nil)
   end
-
-  def handle_call({:accept, socket}, _from, state) do
-    state = close(state)
-    exec = :code.priv_dir(:baud) ++ '/native/baud'
-    port = Port.open({:spawn_executable, exec},
-      [:binary, :exit_status, packet: 2, args: state.args])
-    :inet.setopts(socket, [active: :once])
-    {:reply, :ok, %{state | socket: socket, port: port}}
-  end
-
-  def handle_info({port, {:data, packet}}, state) do
-    if port == state.port do
-      :ok = :gen_tcp.send(state.socket, packet)
-    end
-    {:noreply, state}
-  end
-
-  def handle_info({port, {:exit_status, _exit_status}}, state) do
-    #:io.format "Port closed ~p ~n", [port]
-    if port == state.port do
-      state = %{state | port: nil}
-      {:noreply, close(state)}
-    else
-      {:noreply, state}
-    end
-  end
-
-  def handle_info({:tcp, socket, packet}, state) do
-    if socket == state.socket do
-      true = Port.command(state.port, packet)
-      :inet.setopts(socket, [active: :once])
-    end
-    {:noreply, state}
-  end
-
-  def handle_info({:tcp_closed, socket}, state) do
-    #:io.format "Socket closed ~p ~n", [socket]
-    if socket == state.socket do
-      state = %{state | socket: nil}
-      {:noreply, close(state)}
-    else
-      {:noreply, state}
-    end
-  end
-
-  ##########################################
-  # Socket Server Implementation
-  ##########################################
-
-  defp accept(listener, pid) do
+  defp accept(listener, args, sup, handler) do
     {:ok, socket} = :gen_tcp.accept(listener)
-    :ok = :gen_tcp.controlling_process(socket, pid)
-    :ok = GenServer.call(pid, {:accept, socket})
-    accept(listener, pid)
+    if is_pid(handler) do
+      Process.exit(handler, :kill)
+    end
+    {:ok, handler} = Supervisor.start_child(sup, [socket, args])
+    :ok = :gen_tcp.controlling_process(socket, handler)
+    :go = send handler, :go
+    accept(listener, args, sup, handler)
   end
 
-  ##########################################
-  # Internal Implementation
-  ##########################################
+  def start_child(socket, args) do
+    {:ok, spawn_link(fn ->
+      receive do
+        :go ->
+          exec = :code.priv_dir(:baud) ++ '/native/baud'
+          port = Port.open({:spawn_executable, exec},
+            [:binary, :exit_status, packet: 2, args: args])
+          :ok = :inet.setopts(socket, active: :once)
+          loop(socket, port)
+      end
+    end)}
+  end
 
-  defp close(state) do
-    if nil != state.socket do
-      :ok = :gen_tcp.close(state.socket)
+  defp loop(socket, port) do
+    :ok = receive do
+      {:tcp, ^socket, data} ->
+        true = Port.command(port, data)
+        :ok = :inet.setopts(socket, active: :once)
+      {^port, {:data, data}} ->
+        :ok = :gen_tcp.send(socket, data)
+      _ -> nil #port exit notification
     end
-    if nil != state.port do
-      true = Port.close(state.port)
-    end
-    %{state | socket: nil, port: nil}
+    loop(socket, port)
   end
 
   defp packtype(mode) do

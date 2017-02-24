@@ -19,7 +19,7 @@ defmodule Baud do
     #Read 4 bytes of data
     {:ok, "Hell"} = Baud.read pid, 4
     #Read all available data
-    {:ok, "o"} = Baud.read pid
+    {:ok, "o"} = Baud.readall pid
     #Send more data
     :ok = Baud.write pid, "World!\n..."
     #Wait at least 1 byte is available
@@ -38,10 +38,9 @@ defmodule Baud do
     :ok = Baud.stop pid
     ```
   """
-  use GenServer
 
   @doc """
-  Starts the GenServer.
+  Starts the serial server.
 
   `state` *must* contain a keyword list to be merged with the following defaults:
 
@@ -67,28 +66,32 @@ defmodule Baud do
     ```
   """
   def start_link(params, opts \\ []) do
-      GenServer.start_link(__MODULE__, params, opts)
+      Agent.start_link(fn -> init(params) end, opts)
   end
 
   @to 400
 
   @doc """
-    Stops the GenServer.
+    Stops the serial server.
 
     Returns `:ok`.
   """
   def stop(pid) do
-    #don't use :normal or the port won't be stop
-    Process.exit(pid, :stop)
+    Agent.stop(pid)
   end
 
   @doc """
-  Tests if the native port has compleated all previous commands.
+  Tests if the native port has completed all previous commands.
 
   Returns `:ok`.
   """
-  def echo(pid) do
-    GenServer.call(pid, :echo)
+  def echo(pid, timeout \\ @to) do
+    Agent.get_and_update(pid, fn port ->
+      true = Port.command(port, "e+")
+      receive do
+        {^port, {:data, "+"}} -> {:ok, port}
+      end
+    end, timeout)
   end
 
   @doc """
@@ -96,8 +99,13 @@ defmodule Baud do
 
   Returns `:ok`.
   """
-  def debug(pid, debug) do
-    GenServer.call(pid, {:debug, debug})
+  def debug(pid, debug, timeout \\ @to) do
+    Agent.get_and_update(pid, fn port ->
+      true = Port.command(port, "d#{debug}e+")
+      receive do
+        {^port, {:data, "+"}} -> {:ok, port}
+      end
+    end, timeout)
   end
 
   @doc """
@@ -105,8 +113,14 @@ defmodule Baud do
 
   Returns `:ok`.
   """
-  def write(pid, data) do
-    GenServer.call(pid, {:write, data})
+  def write(pid, data, timeout \\ @to) do
+    Agent.get_and_update(pid, fn port ->
+      true = Port.command(port, "we+")
+      true = Port.command(port, data)
+      receive do
+        {^port, {:data, "+"}} -> {:ok, port}
+      end
+    end, timeout)
   end
 
   @doc """
@@ -114,8 +128,13 @@ defmodule Baud do
 
   Returns `:ok`.
   """
-  def packto(pid, packto) do
-    GenServer.call(pid, {:packto, packto})
+  def packto(pid, packto, timeout \\ @to) do
+    Agent.get_and_update(pid, fn port ->
+      true = Port.command(port, "i#{packto}e+")
+      receive do
+        {^port, {:data, "+"}} -> {:ok, port}
+      end
+    end, timeout)
   end
 
   @doc """
@@ -123,8 +142,13 @@ defmodule Baud do
 
   Returns `{:ok, data}`.
   """
-  def read(pid) do
-    GenServer.call(pid, {:read, 0, @to})
+  def readall(pid, timeout \\ @to) do
+    Agent.get_and_update(pid, fn port ->
+      true = Port.command(port, "r0+#{timeout}")
+      receive do
+        {^port, {:data, packet}} -> {{:ok, packet}, port}
+      end
+    end, timeout)
   end
 
   @doc """
@@ -132,8 +156,13 @@ defmodule Baud do
 
   Returns `{:ok, data}`.
   """
-  def read(pid, count, timeout \\ 400) do
-    GenServer.call(pid, {:read, count, timeout})
+  def read(pid, count, timeout \\ @to) do
+    Agent.get_and_update(pid, fn port ->
+      true = Port.command(port, "r#{count}+#{timeout}")
+      receive do
+        {^port, {:data, packet}} -> {{:ok, packet}, port}
+      end
+    end, timeout)
   end
 
   @doc """
@@ -141,8 +170,13 @@ defmodule Baud do
 
   Returns `{:ok, line}`.
   """
-  def readln(pid, timeout \\ 400) do
-    GenServer.call(pid, {:readln, timeout})
+  def readln(pid, timeout \\ @to) do
+    Agent.get_and_update(pid, fn port ->
+      true = Port.command(port, "n#{timeout}")
+      receive do
+        {^port, {:data, packet}} -> {{:ok, packet}, port}
+      end
+    end, timeout)
   end
 
   @doc """
@@ -150,8 +184,13 @@ defmodule Baud do
 
   Returns `:ok`.
   """
-  def discard(pid) do
-    GenServer.call(pid, :discard)
+  def discard(pid, timeout \\ @to) do
+    Agent.get_and_update(pid, fn port ->
+      true = Port.command(port, "fde+")
+      receive do
+        {^port, {:data, "+"}} -> {:ok, port}
+      end
+    end, timeout)
   end
 
   @doc """
@@ -159,8 +198,13 @@ defmodule Baud do
 
   Returns `{:ok, number_of_bytes}`.
   """
-  def available(pid) do
-    GenServer.call(pid, :available)
+  def available(pid, timeout \\ @to) do
+    Agent.get_and_update(pid, fn port ->
+      true = Port.command(port, "a")
+      receive do
+        {^port, {:data, "a" <> size}} -> {{:ok, int(size)}, port}
+      end
+    end, timeout)
   end
 
   @doc """
@@ -168,8 +212,13 @@ defmodule Baud do
 
   Returns `:ok`.
   """
-  def wait4rx(pid, count, timeout \\ 400) do
-    GenServer.call(pid, {:wait4rx, count, timeout})
+  def wait4rx(pid, count, timeout \\ @to) do
+    Agent.get_and_update(pid, fn port ->
+      true = Port.command(port, "s#{count}+#{timeout}e+")
+      receive do
+        {^port, {:data, "+"}} -> {:ok, port}
+      end
+    end, timeout)
   end
 
   @doc """
@@ -177,8 +226,13 @@ defmodule Baud do
 
   Returns `:ok`.
   """
-  def wait4tx(pid, timeout \\ 400) do
-    GenServer.call(pid, {:wait4tx, timeout})
+  def wait4tx(pid, timeout \\ @to) do
+    Agent.get_and_update(pid, fn port ->
+      true = Port.command(port, "fte+")
+      receive do
+        {^port, {:data, "+"}} -> {:ok, port}
+      end
+    end, timeout)
   end
 
   @doc """
@@ -199,23 +253,30 @@ defmodule Baud do
 
   ## Example:
   ```
+  #rs485 usb adapter to modport
   {:ok, pid} = Baud.start_link([portname: "cu.usbserial-FTVFV143", baudrate: 57600])
   #force 0 to coil at slave 1 address 3000
-  :ok = Baud.rtu(pid, {:fc, 1, 3000, 0}, 400)
+  :ok = Baud.rtu pid, {:fc, 1, 3000, 0}
   #read 0 from coil at slave 1 address 3000
-  {:ok, [0]} = Baud.rtu(pid, {:rc, 1, 3000, 1}, 400)
+  {:ok, [0]} = Baud.rtu pid, {:rc, 1, 3000, 1}
   #force 10 to coils at slave 1 address 3000 to 3001
-  :ok = Baud.rtu(pid, {:fc, 1, 3000, [1, 0]}, 400)
+  :ok = Baud.rtu pid, {:fc, 1, 3000, [1, 0]}
   #read 10 from coils at slave 1 address 3000 to 3001
-  {:ok, [1, 0]} = Baud.rtu(pid, {:rc, 1, 3000, 2}, 400)
+  {:ok, [1, 0]} = Baud.rtu pid, {:rc, 1, 3000, 2}
   #preset 55AA to holding register at slave 1 address 3300
-  :ok = Baud.rtu(pid, {:phr, 1, 3300, 0x55AA}, 400)
+  :ok = Baud.rtu pid, {:phr, 1, 3300, 0x55AA}
   #read 55AA from holding register at slave 1 address 3300 to 3301
-  {:ok, [0x55AA]} = Baud.rtu(pid, {:rhr, 1, 3300, 1}, 400)
+  {:ok, [0x55AA]} = Baud.rtu pid, {:rhr, 1, 3300, 1}
   ```
   """
-  def rtu(pid, cmd, timeout \\ 400) do
-    GenServer.call(pid, {:rtu, cmd, timeout})
+  def rtu(pid, cmd, timeout \\ @to) do
+    Agent.get_and_update(pid, fn port ->
+      true = Port.command(port, "m#{timeout}")
+      true = Port.command(port, Modbus.Request.pack(cmd))
+      receive do
+        {^port, {:data, response}} -> {parse_res(cmd, response), port}
+      end
+    end, timeout)
   end
 
   @doc """
@@ -233,15 +294,16 @@ defmodule Baud do
 
     Returns `:ok`.
   """
-  def close(pid) do
-    GenServer.call(pid, :close)
+  def close(pid, timeout \\ @to) do
+    Agent.get_and_update(pid, fn port ->
+      true = Port.command(port, "ce+")
+      receive do
+        {^port, {:data, "+"}} -> {:ok, port}
+      end
+    end, timeout)
   end
 
-  ##########################################
-  # GenServer Implementation
-  ##########################################
-
-  def init(params) do
+  defp init(params) do
     portname = Keyword.fetch!(params, :portname)
     baudrate = Keyword.get(params, :baudrate, "115200")
     bitconfig = Keyword.get(params, :bitconfig, "8N1")
@@ -250,135 +312,8 @@ defmodule Baud do
     name = Keyword.get(params, :name, "")
     exec = :code.priv_dir(:baud) ++ '/native/baud'
     args = ["o#{portname},#{baudrate},#{bitconfig}b#{bufsize}i#{packto}", name]
-    port = Port.open({:spawn_executable, exec}, [:binary, :exit_status, packet: 2, args: args])
-    {:ok, port}
+    Port.open({:spawn_executable, exec}, [:binary, :exit_status, packet: 2, args: args])
   end
-
-  def terminate(_reason, _state) do
-    #:io.format "terminate ~p ~p ~p ~n", [__MODULE__, reason, state]
-  end
-
-  def handle_call(:echo, _from, port) do
-    true = Port.command(port, "e+")
-    receive do
-      {^port, {:data, "+"}} -> {:reply, :ok, port}
-    after
-      @to -> {:stop, {:echo, :timeout}, port}
-    end
-  end
-
-  def handle_call({:debug, debug}, _from, port) do
-    true = Port.command(port, "d#{debug}e+")
-    receive do
-      {^port, {:data, "+"}} -> {:reply, :ok, port}
-    after
-      @to -> {:stop, {:debug, :timeout}, port}
-    end
-  end
-
-  def handle_call({:packto, packto}, _from, port) do
-    true = Port.command(port, "i#{packto}e+")
-    receive do
-      {^port, {:data, "+"}} -> {:reply, :ok, port}
-    after
-      @to -> {:stop, {:packto, :timeout}, port}
-    end
-  end
-
-  def handle_call({:write, data}, _from, port) do
-    true = Port.command(port, "we+")
-    true = Port.command(port, data)
-    receive do
-      {^port, {:data, "+"}} -> {:reply, :ok, port}
-    after
-      @to -> {:stop, {:write, :timeout}, port}
-    end
-  end
-
-  def handle_call({:read, count, timeout}, _from, port) do
-    true = Port.command(port, "r#{count}+#{timeout}")
-    receive do
-      {^port, {:data, packet}} -> {:reply, {:ok, packet}, port}
-    after
-      timeout -> {:stop, {:read, :timeout}, port}
-    end
-  end
-
-  def handle_call({:readln, timeout}, _from, port) do
-    true = Port.command(port, "n#{timeout}")
-    receive do
-      {^port, {:data, packet}} -> {:reply, {:ok, packet}, port}
-    after
-      timeout -> {:stop, {:readln, :timeout}, port}
-    end
-  end
-
-  def handle_call({:wait4rx, count, timeout}, _from, port) do
-    true = Port.command(port, "s#{count}+#{timeout}e+")
-    receive do
-      {^port, {:data, "+"}} -> {:reply, :ok, port}
-    after
-      timeout -> {:stop, {:wait4rx, :timeout}, port}
-    end
-  end
-
-  def handle_call({:wait4tx, timeout}, _from, port) do
-    true = Port.command(port, "fte+")
-    receive do
-      {^port, {:data, "+"}} -> {:reply, :ok, port}
-    after
-      timeout -> {:stop, {:wait4tx, :timeout}, port}
-    end
-  end
-
-  def handle_call(:available, _from, port) do
-    true = Port.command(port, "a")
-    receive do
-      {^port, {:data, "a" <> size}} -> {:reply, {:ok, int(size)}, port}
-    after
-      @to -> {:stop, {:available, :timeout}, port}
-    end
-  end
-
-  def handle_call(:discard, _from, port) do
-    true = Port.command(port, "fde+")
-    receive do
-      {^port, {:data, "+"}} -> {:reply, :ok, port}
-    after
-      @to -> {:stop, {:discard, :timeout}, port}
-    end
-  end
-
-  def handle_call({:rtu, cmd, timeout}, _from, port) do
-    true = Port.command(port, "m#{timeout}")
-    true = Port.command(port, Modbus.Request.pack(cmd))
-    receive do
-      {^port, {:data, response}} -> {:reply, parse_res(cmd, response), port}
-    after
-      timeout -> {:stop, {:rtu, :timeout}, port}
-    end
-  end
-
-  def handle_call(:close, _from, port) do
-    true = Port.command(port, "ce+")
-    receive do
-      {^port, {:data, "+"}} -> {:reply, :ok, port}
-    after
-      @to -> {:stop, {:close, :timeout}, port}
-    end
-  end
-
-  def handle_info({port, {:data, packet}}, port) do
-    {:stop, {:port_data, packet}, port}
-  end
-
-  def handle_info({port, {:exit_status, exit_status}}, port) do
-    {:stop, {:port_died, exit_status}, port}
-  end
-
-  ##########################################
-  # Internal Implementation
-  ##########################################
 
   defp int(str) do
     {val, _} = Integer.parse(str)

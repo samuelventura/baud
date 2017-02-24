@@ -59,7 +59,7 @@ Some of these modes of operation feature samples below. See the unit tests for m
     #Read 4 bytes of data
     {:ok, "Hell"} = Baud.read pid, 4
     #Read all available data
-    {:ok, "o"} = Baud.read pid
+    {:ok, "o"} = Baud.readall pid
     #Send more data
     :ok = Baud.write pid, "World!\n..."
     #Wait at least 1 byte is available

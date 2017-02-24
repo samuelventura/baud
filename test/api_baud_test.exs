@@ -28,7 +28,7 @@ defmodule Baud.ApiTest do
     #only expect read to return the complete packet with packto=100
     :ok = Baud.packto(pid1, 100)
     :ok = Baud.write(pid0, "echo0\n")
-    {:ok, "echo0\n"} = Baud.read(pid1)
+    {:ok, "echo0\n"} = Baud.readall(pid1)
 
     #speed up by returning to non blocking
     :ok = Baud.packto(pid1, 0)
