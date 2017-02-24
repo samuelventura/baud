@@ -66,8 +66,8 @@ defmodule Baud do
     Baud.start_link([portname: "COM8"])
     ```
   """
-  def start_link(state, opts \\ []) do
-      GenServer.start_link(__MODULE__, state, opts)
+  def start_link(params, opts \\ []) do
+      GenServer.start_link(__MODULE__, params, opts)
   end
 
   @to 400
@@ -241,10 +241,15 @@ defmodule Baud do
   # GenServer Implementation
   ##########################################
 
-  def init(state) do
-    config = Enum.into(state, %{portname: "TTY", baudrate: "115200", bitconfig: "8N1", bufsize: 255, packto: 0, name: ""})
+  def init(params) do
+    portname = Keyword.fetch!(params, :portname)
+    baudrate = Keyword.get(params, :baudrate, "115200")
+    bitconfig = Keyword.get(params, :bitconfig, "8N1")
+    bufsize = Keyword.get(params, :bufsize, 255)
+    packto = Keyword.get(params, :packto, 0)
+    name = Keyword.get(params, :name, "")
     exec = :code.priv_dir(:baud) ++ '/native/baud'
-    args = ["o#{config.portname},#{config.baudrate},#{config.bitconfig}b#{config.bufsize}i#{config.packto}", config.name]
+    args = ["o#{portname},#{baudrate},#{bitconfig}b#{bufsize}i#{packto}", name]
     port = Port.open({:spawn_executable, exec}, [:binary, :exit_status, packet: 2, args: args])
     {:ok, port}
   end

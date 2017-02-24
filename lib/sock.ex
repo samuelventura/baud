@@ -20,14 +20,13 @@ defmodule Baud.Sock do
 
   ```elixir
   %{
-    mode: :raw,
-    ip: {0,0,0,0},
+    mode: :text,
+    ip: {127,0,0,1},
     port: 0,
-    portname: "TTY",
     baudrate: "115200",
     bitconfig: "8N1",
-    bufsize: "255",
-    packto: "0",
+    bufsize: 255,
+    packto: 0,
   }
   ```
 
@@ -93,15 +92,16 @@ defmodule Baud.Sock do
     bitconfig = Keyword.get(params, :bitconfig, "8N1")
     bufsize = Keyword.get(params, :bufsize, 255)
     packto = Keyword.get(params, :packto, 0)
-    mode = Keyword.get(params, :mode, "8N1")
-    name = Keyword.get(params, :name, :text)
-    ip = Keyword.get(params, :ip, {0,0,0,0})
+    mode = Keyword.get(params, :mode, :text)
+    name = Keyword.get(params, :name, "")
+    ip = Keyword.get(params, :ip, {127,0,0,1})
     port = Keyword.get(params, :port, 0)
     flags = flags(mode)
     args = ["o#{portname},#{baudrate},#{bitconfig}b#{bufsize}i#{packto}#{flags}", name]
-    {:ok, listener} = :gen_tcp.listen(port, [:binary, ip: ip, packet: packtype(mode), active: false])
+    {:ok, listener} = :gen_tcp.listen(port, [:binary, ip: ip, packet: packtype(mode), active: false, reuseaddr: true])
+    {:ok, {ip, port}} = :inet.sockname(listener)
     spawn_link(fn -> accept(listener, self) end)
-    {:ok, %{port: nil, socket: nil, args: args}}
+    {:ok, %{port: nil, socket: nil, args: args, id: {ip, port}}}
   end
 
   def terminate(_reason, _state) do
