@@ -1,6 +1,6 @@
 # baud
 
-Elixir Serial Port with Modbus support.
+Elixir Serial Port with Modbus RTU support.
 
 Basic Modbus support:
 
