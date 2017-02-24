@@ -3,13 +3,16 @@ defmodule Baud.SockRtuSlaveTest do
   alias Baud.TestHelper
   alias Baud.Sock
 
+  setup_all do TestHelper.setup_all end
+  setup do TestHelper.setup end
+
   test "rtu slave mode test" do
     tty0 = TestHelper.tty0()
     tty1 = TestHelper.tty1()
     {:ok, pid0} = Sock.start_link([portname: tty0, mode: :rtu_slave, name: Atom.to_string(__MODULE__)])
     {:ok, pid1} = Sock.start_link([portname: tty1, mode: :raw, name: Atom.to_string(__MODULE__)])
-    {:ok, _ip0, port0, _name0} = Sock.id(pid0)
-    {:ok, _ip1, port1, _name1} = Sock.id(pid1)
+    {:ok, %{port: port0}} = Sock.id(pid0)
+    {:ok, %{port: port1}} = Sock.id(pid1)
 
     {:ok, sock0} = :gen_tcp.connect({127,0,0,1}, port0, [:binary, packet: :raw, active: :false], 400)
     {:ok, sock1} = :gen_tcp.connect({127,0,0,1}, port1, [:binary, packet: :raw, active: :false], 400)

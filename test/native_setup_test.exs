@@ -2,6 +2,9 @@ defmodule Baud.NativeSetupTest do
   use ExUnit.Case
   alias Baud.TestHelper
 
+  setup_all do TestHelper.setup_all end
+  setup do TestHelper.setup end
+
   test "setup test" do
     test_setup("115200", "7E1")
     test_setup("115200", "7O1")

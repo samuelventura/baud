@@ -76,7 +76,11 @@ defmodule Baud.Sock do
   end
 
   def id(pid) do
-    Agent.get(pid, fn {ip, port, name} -> {:ok, ip, port, name} end)
+    Agent.get(pid, fn %{ip: ip, port: port, name: name} -> {:ok, %{ip: ip, port: port, name: name}} end)
+  end
+
+  def state(pid) do
+    Agent.get(pid, fn state -> state end)
   end
 
   defp init(params) do
@@ -93,19 +97,17 @@ defmodule Baud.Sock do
     args = ["o#{portname},#{baudrate},#{bitconfig}b#{bufsize}i#{packto}#{flags}", name]
     {:ok, listener} = :gen_tcp.listen(port, [:binary, ip: ip, packet: packtype(mode), active: false])
     {:ok, {ip, port}} = :inet.sockname(listener)
-    spawn_link(fn -> accept(listener, args, nil) end)
-    {ip, port, name}
-  end
-
-  defp accept(listener, args, nil) do
     spec = worker(__MODULE__, [], restart: :temporary, function: :start_child)
     {:ok, sup} = Supervisor.start_link([spec], strategy: :simple_one_for_one)
-    accept(listener, args, sup, nil)
+    accept = spawn_link(fn -> accept(listener, args, sup, nil) end)
+    %{ip: ip, port: port, name: name, sup: sup, accept: accept, listener: listener}
   end
+
   defp accept(listener, args, sup, handler) do
     {:ok, socket} = :gen_tcp.accept(listener)
     if is_pid(handler) do
       Process.exit(handler, :kill)
+      #:timer.sleep(100)
     end
     {:ok, handler} = Supervisor.start_child(sup, [socket, args])
     :ok = :gen_tcp.controlling_process(socket, handler)
@@ -133,7 +135,8 @@ defmodule Baud.Sock do
         :ok = :inet.setopts(socket, active: :once)
       {^port, {:data, data}} ->
         :ok = :gen_tcp.send(socket, data)
-      _ -> nil #port exit notification
+      #port exit notification
+      unexpected -> {:unexpected, unexpected}
     end
     loop(socket, port)
   end

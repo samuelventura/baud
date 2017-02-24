@@ -1,6 +1,6 @@
 # baud
 
-Serial Port with Modbus support.
+Elixir Serial Port with Modbus support.
 
 Basic Modbus support:
 
@@ -101,11 +101,11 @@ Some of these modes of operation feature samples below. See the unit tests for m
 
     ```elixir
     alias Baud.Sock
-    #Do not prepend /dev/ to the port name. Mode defaults to :raw
-    {:ok, pid} = Sock.start_link([portname: "ttyUSB0", port: 5000])
+    #Do not prepend /dev/ to the port name.
+    {:ok, pid} = Sock.start_link([portname: "ttyUSB0", port: 5000, mode: :raw])
     #use netcat to talk to the serial port
     #nc 127.0.0.1 5000
-    :ok = Sock.stop(pid)    
+    :ok = Sock.stop(pid)
     ```
 
   7. Use it to export your serial port to a socket in **text** mode with input buffering up the a newline at the serial port level to avoid to many context switches between Erlang and the native port due to the differences of socket and serial port speed.
@@ -130,6 +130,10 @@ Some of these modes of operation feature samples below. See the unit tests for m
     ```
 
 ## Releases
+
+Version 0.4.2
+
+- [x] Refactored from genserver to actor
 
 Version 0.4.1
 

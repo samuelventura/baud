@@ -86,10 +86,10 @@ defmodule Baud do
   Returns `:ok`.
   """
   def echo(pid, timeout \\ @to) do
-    Agent.get_and_update(pid, fn port ->
-      true = Port.command(port, "e+")
+    Agent.get(pid, fn proxy ->
+      true = command(proxy, "e+")
       receive do
-        {^port, {:data, "+"}} -> {:ok, port}
+        {^proxy, {:data, "+"}} -> :ok
       end
     end, timeout)
   end
@@ -100,10 +100,10 @@ defmodule Baud do
   Returns `:ok`.
   """
   def debug(pid, debug, timeout \\ @to) do
-    Agent.get_and_update(pid, fn port ->
-      true = Port.command(port, "d#{debug}e+")
+    Agent.get(pid, fn proxy ->
+      true = command(proxy, "d#{debug}e+")
       receive do
-        {^port, {:data, "+"}} -> {:ok, port}
+        {^proxy, {:data, "+"}} -> :ok
       end
     end, timeout)
   end
@@ -114,11 +114,11 @@ defmodule Baud do
   Returns `:ok`.
   """
   def write(pid, data, timeout \\ @to) do
-    Agent.get_and_update(pid, fn port ->
-      true = Port.command(port, "we+")
-      true = Port.command(port, data)
+    Agent.get(pid, fn proxy ->
+      true = command(proxy, "we+")
+      true = command(proxy, data)
       receive do
-        {^port, {:data, "+"}} -> {:ok, port}
+        {^proxy, {:data, "+"}} -> :ok
       end
     end, timeout)
   end
@@ -129,10 +129,10 @@ defmodule Baud do
   Returns `:ok`.
   """
   def packto(pid, packto, timeout \\ @to) do
-    Agent.get_and_update(pid, fn port ->
-      true = Port.command(port, "i#{packto}e+")
+    Agent.get(pid, fn proxy ->
+      true = command(proxy, "i#{packto}e+")
       receive do
-        {^port, {:data, "+"}} -> {:ok, port}
+        {^proxy, {:data, "+"}} -> :ok
       end
     end, timeout)
   end
@@ -143,10 +143,10 @@ defmodule Baud do
   Returns `{:ok, data}`.
   """
   def readall(pid, timeout \\ @to) do
-    Agent.get_and_update(pid, fn port ->
-      true = Port.command(port, "r0+#{timeout}")
+    Agent.get(pid, fn proxy ->
+      true = command(proxy, "r0+#{timeout}")
       receive do
-        {^port, {:data, packet}} -> {{:ok, packet}, port}
+        {^proxy, {:data, packet}} -> {:ok, packet}
       end
     end, timeout)
   end
@@ -157,10 +157,10 @@ defmodule Baud do
   Returns `{:ok, data}`.
   """
   def read(pid, count, timeout \\ @to) do
-    Agent.get_and_update(pid, fn port ->
-      true = Port.command(port, "r#{count}+#{timeout}")
+    Agent.get(pid, fn proxy ->
+      true = command(proxy, "r#{count}+#{timeout}")
       receive do
-        {^port, {:data, packet}} -> {{:ok, packet}, port}
+        {^proxy, {:data, packet}} -> {:ok, packet}
       end
     end, timeout)
   end
@@ -171,10 +171,10 @@ defmodule Baud do
   Returns `{:ok, line}`.
   """
   def readln(pid, timeout \\ @to) do
-    Agent.get_and_update(pid, fn port ->
-      true = Port.command(port, "n#{timeout}")
+    Agent.get(pid, fn proxy ->
+      true = command(proxy, "n#{timeout}")
       receive do
-        {^port, {:data, packet}} -> {{:ok, packet}, port}
+        {^proxy, {:data, packet}} -> {:ok, packet}
       end
     end, timeout)
   end
@@ -185,10 +185,10 @@ defmodule Baud do
   Returns `:ok`.
   """
   def discard(pid, timeout \\ @to) do
-    Agent.get_and_update(pid, fn port ->
-      true = Port.command(port, "fde+")
+    Agent.get(pid, fn proxy ->
+      true = command(proxy, "fde+")
       receive do
-        {^port, {:data, "+"}} -> {:ok, port}
+        {^proxy, {:data, "+"}} -> :ok
       end
     end, timeout)
   end
@@ -199,10 +199,10 @@ defmodule Baud do
   Returns `{:ok, number_of_bytes}`.
   """
   def available(pid, timeout \\ @to) do
-    Agent.get_and_update(pid, fn port ->
-      true = Port.command(port, "a")
+    Agent.get(pid, fn proxy ->
+      true = command(proxy, "a")
       receive do
-        {^port, {:data, "a" <> size}} -> {{:ok, int(size)}, port}
+        {^proxy, {:data, "a" <> size}} -> {:ok, int(size)}
       end
     end, timeout)
   end
@@ -213,10 +213,10 @@ defmodule Baud do
   Returns `:ok`.
   """
   def wait4rx(pid, count, timeout \\ @to) do
-    Agent.get_and_update(pid, fn port ->
-      true = Port.command(port, "s#{count}+#{timeout}e+")
+    Agent.get(pid, fn proxy ->
+      true = command(proxy, "s#{count}+#{timeout}e+")
       receive do
-        {^port, {:data, "+"}} -> {:ok, port}
+        {^proxy, {:data, "+"}} -> :ok
       end
     end, timeout)
   end
@@ -227,10 +227,10 @@ defmodule Baud do
   Returns `:ok`.
   """
   def wait4tx(pid, timeout \\ @to) do
-    Agent.get_and_update(pid, fn port ->
-      true = Port.command(port, "fte+")
+    Agent.get(pid, fn proxy ->
+      true = command(proxy, "fte+")
       receive do
-        {^port, {:data, "+"}} -> {:ok, port}
+        {^proxy, {:data, "+"}} -> :ok
       end
     end, timeout)
   end
@@ -270,11 +270,11 @@ defmodule Baud do
   ```
   """
   def rtu(pid, cmd, timeout \\ @to) do
-    Agent.get_and_update(pid, fn port ->
-      true = Port.command(port, "m#{timeout}")
-      true = Port.command(port, Modbus.Request.pack(cmd))
+    Agent.get(pid, fn proxy ->
+      true = command(proxy, "m#{timeout}")
+      true = command(proxy, Modbus.Request.pack(cmd))
       receive do
-        {^port, {:data, response}} -> {parse_res(cmd, response), port}
+        {^proxy, {:data, response}} -> parse_res(cmd, response)
       end
     end, timeout)
   end
@@ -295,10 +295,10 @@ defmodule Baud do
     Returns `:ok`.
   """
   def close(pid, timeout \\ @to) do
-    Agent.get_and_update(pid, fn port ->
-      true = Port.command(port, "ce+")
+    Agent.get(pid, fn proxy ->
+      true = command(proxy, "ce+")
       receive do
-        {^port, {:data, "+"}} -> {:ok, port}
+        {^proxy, {:data, "+"}} -> :ok
       end
     end, timeout)
   end
@@ -310,9 +310,32 @@ defmodule Baud do
     bufsize = Keyword.get(params, :bufsize, 255)
     packto = Keyword.get(params, :packto, 0)
     name = Keyword.get(params, :name, "")
-    exec = :code.priv_dir(:baud) ++ '/native/baud'
     args = ["o#{portname},#{baudrate},#{bitconfig}b#{bufsize}i#{packto}", name]
-    Port.open({:spawn_executable, exec}, [:binary, packet: 2, args: args])
+    start_proxy(self(), args)
+  end
+
+  defp start_proxy(agent, args) do
+    spawn_link(fn ->
+      exec = :code.priv_dir(:baud) ++ '/native/baud'
+      port = Port.open({:spawn_executable, exec}, [:binary, :exit_status, packet: 2, args: args])
+      loop(agent, port)
+    end)
+  end
+  defp loop(agent, port) do
+    receive do
+      {:cmd, cmd} ->
+        true = Port.command(port, cmd)
+      {^port, {:data, data}} ->
+        send agent, {self(), {:data, data}}
+      #port exit notification
+      unexpected -> :ok = {:unexpected, unexpected}
+    end
+    loop(agent, port)
+  end
+
+  defp command(pid, cmd) do
+    send pid, {:cmd, cmd}
+    true
   end
 
   defp int(str) do

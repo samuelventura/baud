@@ -36,6 +36,17 @@ defmodule Baud.TestHelper do
       {:win32, :nt} -> tty
     end
   end
+
+  def setup_all() do
+    System.cmd("killall", ["-9", "baud"], [stderr_to_stdout: true])
+    :timer.sleep(400)
+    :ok
+  end
+
+  def setup() do
+    :ok
+  end
+
 end
 
 ExUnit.start()

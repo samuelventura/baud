@@ -2,6 +2,9 @@ defmodule Baud.LoopRtuSlaveTest do
   use ExUnit.Case
   alias Baud.TestHelper
 
+  setup_all do TestHelper.setup_all end
+  setup do TestHelper.setup end
+
   test "modbus rtu slave echo" do
     exec = :code.priv_dir(:baud) ++ '/native/baud'
     tty0 = TestHelper.tty0()

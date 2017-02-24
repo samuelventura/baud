@@ -2,6 +2,9 @@ defmodule Baud.ApiTest do
   use ExUnit.Case
   alias Baud.TestHelper
 
+  setup_all do TestHelper.setup_all end
+  setup do TestHelper.setup end
+
   @doc """
   Check the baud genserver API.
   """
