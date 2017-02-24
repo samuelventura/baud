@@ -38,13 +38,24 @@ defmodule Baud.TestHelper do
   end
 
   def setup_all() do
-    System.cmd("killall", ["-9", "baud"], [stderr_to_stdout: true])
+    kill_baud()
     :timer.sleep(400)
     :ok
   end
 
   def setup() do
     :ok
+  end
+
+  def kill_baud() do
+    case :os.type() do
+      {:unix, :darwin} ->
+        System.cmd("killall", ["-9", "baud"], [stderr_to_stdout: true])
+      {:unix, :linux} ->
+        System.cmd("killall", ["-9", "baud"], [stderr_to_stdout: true])
+      {:win32, :nt} ->
+        System.cmd("tskill", ["baud"], [stderr_to_stdout: true])
+    end
   end
 
 end

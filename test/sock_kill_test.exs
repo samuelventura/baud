@@ -26,7 +26,7 @@ defmodule Baud.SockKillTest do
     check_closed(sock0)
 
     1 = count_child(pid1)
-    System.cmd("killall", ["-9", "baud"])
+    TestHelper.kill_baud
     :timer.sleep(200)
     0 = count_child(pid1)
     check_closed(sock1)
@@ -44,8 +44,9 @@ defmodule Baud.SockKillTest do
   defp check_closed(socket) do
     :ok = :gen_tcp.send(socket, "\n")
     #close status detected on receive
-    {:error, :closed} = :gen_tcp.recv(socket, 0)
-    {:error, :closed} = :gen_tcp.send(socket, "\n")
+    #mac returns :closed windows :econnaborted
+    {:error, _} = :gen_tcp.recv(socket, 0)
+    {:error, _} = :gen_tcp.send(socket, "\n")
   end
 
   defp kill_child(agent) do

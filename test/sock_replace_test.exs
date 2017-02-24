@@ -21,6 +21,13 @@ defmodule Baud.SockReplaceTest do
 
     {:ok, sock1} = :gen_tcp.connect({127,0,0,1}, port1, [:binary, packet: :line, active: :false], 400)
 
+    #windows fails the first reconnection attempt
+    {:ok, sock1} = case :os.type() do
+      {:win32, :nt} ->
+        :timer.sleep(400) #allow the close/reopen to settle
+        :gen_tcp.connect({127,0,0,1}, port1, [:binary, packet: :line, active: :false], 400)
+      _ -> {:ok, sock1}
+    end
     :timer.sleep(100) #allow the close/reopen to settle
 
     loop(sock0, sock1, "#{port0}#{port1}\n")

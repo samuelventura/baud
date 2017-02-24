@@ -18,7 +18,7 @@ defmodule Baud.KillTest do
     #:ok = Baud.debug(pid1, 1)
 
     loop(pid0, pid1)
-    System.cmd("killall", ["-9", "baud"])
+    TestHelper.kill_baud
     :timer.sleep(200)
     assert false == Process.alive?(pid0)
     assert false == Process.alive?(pid1)
