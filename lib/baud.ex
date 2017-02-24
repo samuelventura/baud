@@ -318,19 +318,20 @@ defmodule Baud do
     spawn_link(fn ->
       exec = :code.priv_dir(:baud) ++ '/native/baud'
       port = Port.open({:spawn_executable, exec}, [:binary, :exit_status, packet: 2, args: args])
-      loop(agent, port)
+      loop_proxy(agent, port)
     end)
   end
-  defp loop(agent, port) do
-    receive do
+  defp loop_proxy(agent, port) do
+    true = receive do
       {:cmd, cmd} ->
         true = Port.command(port, cmd)
       {^port, {:data, data}} ->
         send agent, {self(), {:data, data}}
+        true
       #port exit notification
-      unexpected -> :ok = {:unexpected, unexpected}
+      unexpected -> {:unexpected, unexpected}
     end
-    loop(agent, port)
+    loop_proxy(agent, port)
   end
 
   defp command(pid, cmd) do

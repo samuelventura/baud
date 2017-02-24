@@ -133,6 +133,8 @@ Some of these modes of operation feature samples below. See the unit tests for m
 
 Version 0.4.2
 
+- [x] Port proxy added to ensure proper closing on exit status msg
+- [x] Kill tests added for both baud and sock
 - [x] Refactored from genserver to actor
 
 Version 0.4.1
@@ -168,7 +170,6 @@ Version 0.1.0
 - [ ] Support udoo neo
 - [ ] Support beaglebone black
 - [ ] Support raspberry pi 3 B
-- [ ] Ensure agent wont get killed by unexpected messages
 - [ ] Assess rewriting the windows native code using the win32 api
 - [ ] Assess rewriting the windows native code using c#/.net
 - [ ] Split into a core package and OS dependant packages holding native code
