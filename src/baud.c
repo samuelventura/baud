@@ -241,6 +241,28 @@ void cmd_readline(struct CMD* cmd) {
   }
 }
 
+//return whatever is available when certain char is found
+void cmd_waitchar(struct CMD* cmd) {
+  int ic = 0;
+  char ch = read_char(cmd);
+  unsigned char buffer[context.bufsize];
+  unsigned long dl = millis() + read_uint(cmd);
+  while (1) {
+    while (serial_available() > 0) {
+      //interchar timeout is applied despite fetching byte by byte
+      //use only with packto=0 or expect length * packto delays
+      ic += serial_read(buffer + ic, 1);
+      if (buffer[ic - 1] == ch) {
+        stdout_write_packet(buffer, ic);
+        return;
+      }
+      if (ic >= context.bufsize) crash("Readpack %i buffer overflow %d %s", ch, ic, buffer);
+    }
+    if (dl < millis()) return;
+    milli_sleep(1);
+  }
+}
+
 void cmd_count_available_data(struct CMD* cmd) {
   char buffer[12];
   int count = serial_available();
@@ -314,6 +336,9 @@ void process_cmd(struct CMD* cmd) {
         break;
       case 'n':
         cmd_readline(cmd);
+        break;
+      case 'k':
+        cmd_waitchar(cmd);
         break;
       case 'a':
         cmd_count_available_data(cmd);

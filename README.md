@@ -20,7 +20,7 @@ Some of these modes of operation feature samples below. See the unit tests for m
 
     ```elixir
     def deps do
-      [{:baud, "~> 0.4.1"}]
+      [{:baud, "~> 0.4.2"}]
     end
     ```
 

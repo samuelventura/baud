@@ -25,6 +25,8 @@ defmodule Baud.ApiTest do
     {:ok, 0} = Baud.available(pid0)
     :ok = Baud.write(pid1, "echo1\n")
     {:ok, "echo1\n"} = Baud.readln(pid0, 400)
+    :ok = Baud.write(pid1, "echo1\n")
+    {:ok, "echo1\n"} = Baud.wait4ch(pid0, "\n", 400)
     :ok = Baud.write(pid1, "echo2\n")
     {:ok, "echo2\n"} = Baud.read(pid0, 6, 400)
 

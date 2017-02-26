@@ -148,7 +148,7 @@ defmodule Baud do
       receive do
         {^proxy, {:data, packet}} -> {:ok, packet}
       end
-    end, timeout)
+    end, 2*timeout)
   end
 
   @doc """
@@ -162,7 +162,7 @@ defmodule Baud do
       receive do
         {^proxy, {:data, packet}} -> {:ok, packet}
       end
-    end, timeout)
+    end, 2*timeout)
   end
 
   @doc """
@@ -176,7 +176,21 @@ defmodule Baud do
       receive do
         {^proxy, {:data, packet}} -> {:ok, packet}
       end
-    end, timeout)
+    end, 2*timeout)
+  end
+
+  @doc """
+  Reads until a char and including it.
+
+  Returns `{:ok, data}`.
+  """
+  def wait4ch(pid, bin=<<_ch>>, timeout \\ @to) do
+    Agent.get(pid, fn proxy ->
+      true = command(proxy, "k" <> bin  <> "#{timeout}")
+      receive do
+        {^proxy, {:data, packet}} -> {:ok, packet}
+      end
+    end, 2*timeout)
   end
 
   @doc """
@@ -218,7 +232,7 @@ defmodule Baud do
       receive do
         {^proxy, {:data, "+"}} -> :ok
       end
-    end, timeout)
+    end, 2*timeout)
   end
 
   @doc """
@@ -276,7 +290,7 @@ defmodule Baud do
       receive do
         {^proxy, {:data, response}} -> parse_res(cmd, response)
       end
-    end, timeout)
+    end, 2*timeout)
   end
 
   @doc """

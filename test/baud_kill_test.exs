@@ -28,7 +28,7 @@ defmodule Baud.KillTest do
   defp loop(pid0, pid1) do
     for _ <- 0..10 do
       :ok = Baud.write(pid0, "echo\n")
-      {:ok, "echo\n"} = Baud.readln(pid1, 400)
+      {:ok, "echo\n"} = Baud.wait4ch(pid1, "\n", 400)
     end
   end
 
