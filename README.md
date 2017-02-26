@@ -133,10 +133,11 @@ Some of these modes of operation feature samples below. See the unit tests for m
 
 Version 0.4.3
 
-- [ ] Add wait4ch to handle non standard line/packet terminators
+- [x] Add wait4ch to handle non standard line/packet terminators
 - [ ] Review proxy need
 - [ ] Move to win32 api
 - [ ] Remote compile mix task to Linux & Windows
+- [ ] Implement as NIF
 
 Version 0.4.2
 
