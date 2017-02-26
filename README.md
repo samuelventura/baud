@@ -143,6 +143,7 @@ Version 0.4.3
 - [ ] Review proxy need
 - [ ] Remote compile mix task to Linux & Windows
 - [ ] Document deloy dependencies
+- [ ] Move sock to its own forward-baud repo
 
 Version 0.4.2
 
