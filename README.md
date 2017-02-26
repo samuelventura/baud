@@ -131,6 +131,13 @@ Some of these modes of operation feature samples below. See the unit tests for m
 
 ## Releases
 
+Version 0.4.3
+
+- [ ] Add wait4ch to handle non standard line/packet terminators
+- [ ] Review proxy need
+- [ ] Move to win32 api
+- [ ] Remote compile mix task to Linux & Windows
+
 Version 0.4.2
 
 - [x] Port proxy added to ensure proper closing on exit status msg
