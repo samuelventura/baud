@@ -4,8 +4,8 @@ defmodule Baud.TestHelper do
   #USB-RS485-WE USB to RS485 Adapter
   def tty() do
     case :os.type() do
-      {:unix, :darwin} -> "cu.usbserial-FTVFV143"
-      {:unix, :linux} -> "ttyUSB0"
+      {:unix, :darwin} -> "/dev/cu.usbserial-FTVFV143"
+      {:unix, :linux} -> "/dev/ttyUSB2"
       {:win32, :nt} -> "COM10"
     end
   end
@@ -15,46 +15,17 @@ defmodule Baud.TestHelper do
   #Shorter is #1. Larger is #2.
   def tty0() do
     case :os.type() do
-      {:unix, :darwin} -> "cu.usbserial-FTYHQD9MA"
-      {:unix, :linux} -> "ttyUSB0"
+      {:unix, :darwin} -> "/dev/cu.usbserial-FTYHQD9MA"
+      {:unix, :linux} -> "/dev/ttyUSB0"
       {:win32, :nt} -> "COM12"
     end
   end
 
   def tty1() do
     case :os.type() do
-      {:unix, :darwin} -> "cu.usbserial-FTYHQD9MB"
-      {:unix, :linux} -> "ttyUSB1"
+      {:unix, :darwin} -> "/dev/cu.usbserial-FTYHQD9MB"
+      {:unix, :linux} -> "/dev/ttyUSB1"
       {:win32, :nt} -> "COM13"
-    end
-  end
-
-  def full(tty) do
-    case :os.type() do
-      {:unix, :darwin} -> "/dev/" <> tty
-      {:unix, :linux} -> "/dev/" <> tty
-      {:win32, :nt} -> tty
-    end
-  end
-
-  def setup_all() do
-    kill_baud()
-    :timer.sleep(400)
-    :ok
-  end
-
-  def setup() do
-    :ok
-  end
-
-  def kill_baud() do
-    case :os.type() do
-      {:unix, :darwin} ->
-        System.cmd("killall", ["-9", "baud"], [stderr_to_stdout: true])
-      {:unix, :linux} ->
-        System.cmd("killall", ["-9", "baud"], [stderr_to_stdout: true])
-      {:win32, :nt} ->
-        System.cmd("tskill", ["baud"], [stderr_to_stdout: true])
     end
   end
 
