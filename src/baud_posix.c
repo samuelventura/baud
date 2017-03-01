@@ -15,7 +15,8 @@ int serial_open(BAUD_RESOURCE *res, int speed) {
 
   struct termios fdt = {0};
   res->fd = -1;
-  res->fd = open(res->device, O_RDWR | O_NOCTTY);
+  snprintf(res->path, MAXPATH + 1, "/dev/%s", res->device);
+  res->fd = open(res->path, O_RDWR | O_NOCTTY);
 
   if (res->fd < 0)
     return -1;

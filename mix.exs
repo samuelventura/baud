@@ -1,6 +1,10 @@
 defmodule Mix.Tasks.Compile.Nif do
   def run(_) do
-    0 = Mix.Shell.IO.cmd("make")
+    case :os.type() do
+      {:unix, :darwin} -> 0 = Mix.Shell.IO.cmd("make")
+      {:unix, :linux} -> 0 = Mix.Shell.IO.cmd("make")
+      {:win32, :nt} -> 0 = Mix.Shell.IO.cmd("build")
+    end
     :ok
   end
 end

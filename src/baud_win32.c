@@ -1,19 +1,6 @@
-#include "baud_nif.h"
 #include <windows.h>
 #include <stdio.h>
-
-/*
-https://blogs.msdn.microsoft.com/vcblog/2015/11/02/announcing-visual-c-build-tools-2015-standalone-c-tools-for-build-environments/
-http://landinghub.visualstudio.com/visual-cpp-build-tools
-https://www.visualstudio.com/downloads/#build-tools-for-visual-studio-2017-rc
-
-from visualcppbuildtools_full.exe (VC++ 2015 update 3) installed Windows 8.1
-SDk  C:\Program Files (x86)\Microsoft Visual C++ Build Tools
-
-call "C:\Program Files (x86)\Microsoft Visual C++ Build Tools\vcbuildtools.bat"
-cd c:\Users\samuel\Documents\github\baud
-https://msdn.microsoft.com/en-us/library/ff802693.aspx
-*/
+#include "baud_nif.h"
 
 int serial_open(BAUD_RESOURCE *res, int speed) {
 
@@ -91,21 +78,21 @@ int serial_open(BAUD_RESOURCE *res, int speed) {
 size_t serial_available(BAUD_RESOURCE *res) {
   COMSTAT baudStat;
   if (!ClearCommError(res->handle, NULL, &baudStat))
-    return -1;
+    return (DWORD)-1;
   return baudStat.cbInQue;
 }
 
 size_t serial_read(BAUD_RESOURCE *res, unsigned char *buffer, int size) {
   DWORD count = 0;
   if (!ReadFile(res->handle, buffer, size, &count, NULL))
-    return -1;
+    return (DWORD)-1;
   return count;
 }
 
 size_t serial_write(BAUD_RESOURCE *res, unsigned char *buffer, int size) {
   DWORD count = 0;
   if (!WriteFile(res->handle, buffer, size, &count, NULL))
-    return -1;
+    return (DWORD)-1;
   return count;
 }
 
@@ -113,8 +100,8 @@ int serial_close(BAUD_RESOURCE *res) {
   HANDLE handle = res->handle;
   res->handle = INVALID_HANDLE_VALUE;
   if (handle == INVALID_HANDLE_VALUE)
-    return -1;
+    return (DWORD)-1;
   if (!CloseHandle(handle))
-    return -1;
+    return (DWORD)-1;
   return 0;
 }

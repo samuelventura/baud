@@ -1,7 +1,7 @@
 #include "baud_nif.h"
 #include "erl_nif.h"
 
-#include <string.h>
+#include <stdio.h>
 
 // http://erlang.org/doc/man/erl_nif.html
 // http://erlang.org/doc/tutorial/nif.html
@@ -28,8 +28,10 @@ static int open_resource(ErlNifEnv *env) {
   RES_TYPE = enif_open_resource_type(
       env, "Elixir.Baud.Nif", "Elixir.Baud.Nif", release_resource,
       ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER, NULL);
+
   if (RES_TYPE == NULL)
     return -1;
+
   return 0;
 }
 
@@ -85,17 +87,18 @@ static ERL_NIF_TERM nif_open(ErlNifEnv *env, int argc,
     return enif_make_badarg(env);
   }
   ErlNifBinary config;
-  if (!enif_inspect_binary(env, argv[2], &config) || config.size != 3) {
+  if (!enif_inspect_binary(env, argv[2], &config)) {
+    return enif_make_badarg(env);
+  }
+  if (config.size != 3) {
     return enif_make_badarg(env);
   }
   BAUD_RESOURCE *res =
       (BAUD_RESOURCE *)enif_alloc_resource(RES_TYPE, sizeof(BAUD_RESOURCE));
   if (res == NULL)
     return enif_make_badarg(env);
-  memcpy(res->device, device.data, device.size);
-  memcpy(res->config, config.data, config.size);
-  res->device[device.size] = 0;
-  res->config[config.size] = 0;
+  snprintf(res->device, MAXPATH + 1, (const char *const)device.data);
+  snprintf(res->config, 3 + 1, (const char *const)config.data);
   if (serial_open(res, speed) < 0) {
     serial_close(res); // may have failed after creation
     enif_release_resource(res);
@@ -170,4 +173,5 @@ static ErlNifFunc nif_funcs[] = {{"open", 3, nif_open, 0},
                                  {"write", 2, nif_write, 0},
                                  {"close", 1, nif_close, 0}};
 
-ERL_NIF_INIT(Elixir.Baud.Nif, nif_funcs, &load, &reload, &upgrade, NULL)
+//ERL_NIF_INIT(Elixir.Baud.Nif, nif_funcs, &load, &reload, &upgrade, NULL)
+ERL_NIF_INIT(Elixir.Baud.Nif, nif_funcs, NULL, NULL, NULL, NULL)
