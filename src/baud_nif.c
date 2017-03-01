@@ -105,6 +105,8 @@ static ERL_NIF_TERM nif_open(ErlNifEnv *env, int argc,
         env,
         enif_make_string(env, "enif_alloc_resource failed", ERL_NIF_LATIN1));
   }
+  ERL_NIF_TERM resterm = enif_make_resource(env, res);
+  enif_release_resource(res);
   snprintf(res->device, device.size + 1, (const char *const)device.data);
   snprintf(res->config, config.size + 1, (const char *const)config.data);
   serial_open(res, speed);
@@ -112,11 +114,10 @@ static ERL_NIF_TERM nif_open(ErlNifEnv *env, int argc,
     // prevent error override by close method
     const char *error = res->error;
     serial_close(res);
-    enif_release_resource(res);
     return enif_make_tuple2(env, atom_er,
                             enif_make_string(env, error, ERL_NIF_LATIN1));
   }
-  return enif_make_tuple2(env, atom_ok, enif_make_resource(env, res));
+  return enif_make_tuple2(env, atom_ok, resterm);
 }
 
 static ERL_NIF_TERM nif_read(ErlNifEnv *env, int argc,

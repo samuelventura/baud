@@ -2,7 +2,7 @@ defmodule Baud.NifErrorTest do
   use ExUnit.Case
   alias Baud.TestHelper
 
-  test "open validation test" do
+  test "error test" do
     tty0 = TestHelper.tty0
     {:er, 'Argument 0 is not a binary'} = Baud.Nif.open nil, nil, nil
     {:er, 'Invalid device'} = Baud.Nif.open bin(256), nil, nil
