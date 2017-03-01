@@ -7,34 +7,19 @@ defmodule Baud.Nif do
     :erlang.load_nif(nif, 0)
   end
 
-  def open(device, speed, config)
-    when is_binary(device) and
-    byte_size(device) < 256 and
-    is_integer(speed) and
-    speed > 0 and
-    speed < 0x7FFFFFFF and
-    is_binary(config) and
-    byte_size(config) == 3
-  do
+  def open(_device, _speed, _config) do
     "NIF library not loaded"
   end
 
-  def read(fd)
-    when is_integer(fd)
-  do
+  def read(_nid) do
     "NIF library not loaded"
   end
 
-  def write(fd, data)
-    when is_integer(fd) and
-    is_binary(data)
-  do
+  def write(_nid, _data) do
     "NIF library not loaded"
   end
 
-  def close(fd)
-    when is_integer(fd)
-  do
+  def close(_nid) do
     "NIF library not loaded"
   end
 
