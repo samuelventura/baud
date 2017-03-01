@@ -11,3 +11,8 @@ Elixir NIF Serial Port.
       [{:baud, "~> 0.5.0"}]
     end
     ```
+
+
+## Development
+
+- Install and use clang-format package

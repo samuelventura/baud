@@ -7,7 +7,7 @@ OBJDIR   = obj
 
 ifeq (MSYS_NT,$(findstring MSYS_NT,$(UNAME)))
 	TARGET	= priv/baud_nif.dll
-	SOURCES	= src/baud_msys2.c src/baud_nif.c
+	SOURCES	= src/baud_win32.c src/baud_nif.c
 else
 	TARGET	= priv/baud_nif.so
 	SOURCES = src/baud_posix.c src/baud_nif.c
