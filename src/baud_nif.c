@@ -173,5 +173,4 @@ static ErlNifFunc nif_funcs[] = {{"open", 3, nif_open, 0},
                                  {"write", 2, nif_write, 0},
                                  {"close", 1, nif_close, 0}};
 
-//ERL_NIF_INIT(Elixir.Baud.Nif, nif_funcs, &load, &reload, &upgrade, NULL)
-ERL_NIF_INIT(Elixir.Baud.Nif, nif_funcs, NULL, NULL, NULL, NULL)
+ERL_NIF_INIT(Elixir.Baud.Nif, nif_funcs, &load, &reload, &upgrade, NULL)
