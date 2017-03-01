@@ -3,7 +3,7 @@ defmodule Mix.Tasks.Compile.Nif do
     case :os.type() do
       {:unix, :darwin} -> 0 = Mix.Shell.IO.cmd("make")
       {:unix, :linux} -> 0 = Mix.Shell.IO.cmd("make")
-      {:win32, :nt} -> 0 = Mix.Shell.IO.cmd("build")
+      {:win32, :nt} -> nil #0 = Mix.Shell.IO.cmd("build")
     end
     :ok
   end
@@ -35,7 +35,7 @@ defmodule Baud.Mixfile do
   end
 
   defp description do
-    "Elixir NIF Serial Port."
+    "Elixir Serial Port with Modbus RTU."
   end
 
   defp package do

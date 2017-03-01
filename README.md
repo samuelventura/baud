@@ -1,6 +1,6 @@
 # baud
 
-Elixir NIF Serial Port.
+Elixir Serial Port with Modbus RTU.
 
 ## Installation and Usage
 
@@ -13,6 +13,6 @@ Elixir NIF Serial Port.
     ```
 
 
-## Development
+## Development Notes
 
-- Install and use clang-format package
+- Install and use clang-format atom package
