@@ -1,8 +1,8 @@
-defmodule Baud.ApiTest do
+defmodule Baud.NifCrudTest do
   use ExUnit.Case
   alias Baud.TestHelper
 
-  test "baud test" do
+  test "api test" do
     tty0 = TestHelper.tty0
     tty1 = TestHelper.tty1
     {:ok, nid0} = Baud.Nif.open tty0, 115200, "8N1"

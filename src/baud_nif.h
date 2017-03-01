@@ -9,9 +9,11 @@
 #ifdef _WIN32
 #include <windows.h>
 #define COUNT DWORD
+#define PADSIZE 4 // //./
 #else
 #include <termios.h>
 #define COUNT int
+#define PADSIZE 5 //  /dev/
 #endif
 
 typedef struct BAUD_RESOURCE {

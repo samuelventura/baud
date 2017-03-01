@@ -15,7 +15,7 @@ void serial_open(BAUD_RESOURCE *res, int speed) {
   res->handle = CreateFile(res->path, GENERIC_READ | GENERIC_WRITE, 0, 0,
                            OPEN_EXISTING, 0, 0);
   if (res->handle == INVALID_HANDLE_VALUE) {
-    res->error = "CreateFile returned INVALID_HANDLE_VALUE";
+    res->error = "CreateFile failed";
     return;
   }
   if (!GetCommState(res->handle, &dcb)) {

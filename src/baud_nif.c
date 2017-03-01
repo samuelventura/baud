@@ -64,36 +64,53 @@ static int upgrade(ErlNifEnv *env, void **priv, void **old_priv,
 static ERL_NIF_TERM nif_open(ErlNifEnv *env, int argc,
                              const ERL_NIF_TERM argv[]) {
   if (argc != 3) {
-    return enif_make_badarg(env);
+    return enif_make_tuple2(
+        env, atom_er,
+        enif_make_string(env, "Invalid argument count", ERL_NIF_LATIN1));
   }
   ErlNifBinary device;
   if (!enif_inspect_binary(env, argv[0], &device)) {
-    return enif_make_badarg(env);
+    return enif_make_tuple2(
+        env, atom_er,
+        enif_make_string(env, "Argument 0 is not a binary", ERL_NIF_LATIN1));
   }
-  if (device.size > MAXPATH) {
-    return enif_make_badarg(env);
+  if (device.size > MAXPATH - PADSIZE) {
+    return enif_make_tuple2(
+        env, atom_er, enif_make_string(env, "Invalid device", ERL_NIF_LATIN1));
   }
   int speed;
   if (!enif_get_int(env, argv[1], &speed)) {
-    return enif_make_badarg(env);
+    return enif_make_tuple2(
+        env, atom_er,
+        enif_make_string(env, "Argument 1 is not an integer", ERL_NIF_LATIN1));
+  }
+  if (speed <= 0 || speed >= 0x7FFFFFFF) {
+    return enif_make_tuple2(
+        env, atom_er, enif_make_string(env, "Invalid speed", ERL_NIF_LATIN1));
   }
   ErlNifBinary config;
   if (!enif_inspect_binary(env, argv[2], &config)) {
-    return enif_make_badarg(env);
+    return enif_make_tuple2(
+        env, atom_er,
+        enif_make_string(env, "Argument 2 is not a binary", ERL_NIF_LATIN1));
   }
   if (config.size != 3) {
-    return enif_make_badarg(env);
+    return enif_make_tuple2(
+        env, atom_er, enif_make_string(env, "Invalid config", ERL_NIF_LATIN1));
   }
   BAUD_RESOURCE *res =
       (BAUD_RESOURCE *)enif_alloc_resource(RES_TYPE, sizeof(BAUD_RESOURCE));
-  if (res == NULL)
-    return enif_make_badarg(env);
+  if (res == NULL) {
+    return enif_raise_exception(
+        env,
+        enif_make_string(env, "enif_alloc_resource failed", ERL_NIF_LATIN1));
+  }
   snprintf(res->device, device.size + 1, (const char *const)device.data);
   snprintf(res->config, config.size + 1, (const char *const)config.data);
   serial_open(res, speed);
   if (res->error != NULL) {
-    //prevent error override by close method
-    const char* error = res->error;
+    // prevent error override by close method
+    const char *error = res->error;
     serial_close(res);
     enif_release_resource(res);
     return enif_make_tuple2(env, atom_er,
@@ -105,11 +122,15 @@ static ERL_NIF_TERM nif_open(ErlNifEnv *env, int argc,
 static ERL_NIF_TERM nif_read(ErlNifEnv *env, int argc,
                              const ERL_NIF_TERM argv[]) {
   if (argc != 1) {
-    return enif_make_badarg(env);
+    return enif_make_tuple2(
+        env, atom_er,
+        enif_make_string(env, "Invalid argument count", ERL_NIF_LATIN1));
   }
   BAUD_RESOURCE *res = NULL;
   if (!enif_get_resource(env, argv[0], RES_TYPE, (void **)&res)) {
-    return enif_make_badarg(env);
+    return enif_make_tuple2(
+        env, atom_er,
+        enif_make_string(env, "Argument 0 is not a resource", ERL_NIF_LATIN1));
   }
   serial_available(res);
   if (res->error != NULL) {
@@ -135,15 +156,21 @@ static ERL_NIF_TERM nif_read(ErlNifEnv *env, int argc,
 static ERL_NIF_TERM nif_write(ErlNifEnv *env, int argc,
                               const ERL_NIF_TERM argv[]) {
   if (argc != 2) {
-    return enif_make_badarg(env);
+    return enif_make_tuple2(
+        env, atom_er,
+        enif_make_string(env, "Invalid argument count", ERL_NIF_LATIN1));
   }
   BAUD_RESOURCE *res = NULL;
   if (!enif_get_resource(env, argv[0], RES_TYPE, (void **)&res)) {
-    return enif_make_badarg(env);
+    return enif_make_tuple2(
+        env, atom_er,
+        enif_make_string(env, "Argument 0 is not a resource", ERL_NIF_LATIN1));
   }
   ErlNifBinary bin;
   if (!enif_inspect_binary(env, argv[1], &bin)) {
-    return enif_make_badarg(env);
+    return enif_make_tuple2(
+        env, atom_er,
+        enif_make_string(env, "Argument 1 is not a binary", ERL_NIF_LATIN1));
   }
   serial_write(res, bin.data, (COUNT)bin.size);
   if (res->error != NULL) {
@@ -156,11 +183,15 @@ static ERL_NIF_TERM nif_write(ErlNifEnv *env, int argc,
 static ERL_NIF_TERM nif_close(ErlNifEnv *env, int argc,
                               const ERL_NIF_TERM argv[]) {
   if (argc != 1) {
-    return enif_make_badarg(env);
+    return enif_make_tuple2(
+        env, atom_er,
+        enif_make_string(env, "Invalid argument count", ERL_NIF_LATIN1));
   }
   BAUD_RESOURCE *res = NULL;
   if (!enif_get_resource(env, argv[0], RES_TYPE, (void **)&res)) {
-    return enif_make_badarg(env);
+    return enif_make_tuple2(
+        env, atom_er,
+        enif_make_string(env, "Argument 0 is not a resource", ERL_NIF_LATIN1));
   }
   serial_close(res);
   if (res->error != NULL) {
