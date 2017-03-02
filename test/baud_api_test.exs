@@ -32,6 +32,8 @@ defmodule Baud.ApiTest do
     Baud.write pid0, "43210"
     :timer.sleep 100
     assert {:ok, "01234\n56789\n98765\n43210"} == Baud.readall pid1
+    :ok = Baud.stop pid0
+    :ok = Baud.stop pid1
   end
 
 end

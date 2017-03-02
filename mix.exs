@@ -3,7 +3,7 @@ defmodule Mix.Tasks.Compile.Nif do
     case :os.type() do
       {:unix, :darwin} -> 0 = Mix.Shell.IO.cmd("make")
       {:unix, :linux} -> 0 = Mix.Shell.IO.cmd("make")
-      {:win32, :nt} -> nil #0 = Mix.Shell.IO.cmd("build")
+      {:win32, :nt} -> 0 = Mix.Shell.IO.cmd("build")
     end
     :ok
   end
@@ -31,7 +31,7 @@ defmodule Baud.Mixfile do
 
   defp deps do
     [
-      {:modbus, "~> 0.3.1"},
+      {:modbus, "~> 0.3.2"},
       {:ex_doc, "~> 0.12", only: :dev},
     ]
   end
@@ -52,6 +52,8 @@ defmodule Baud.Mixfile do
   defp aliases do
     [
       "baud": ["run scripts/baud.exs"],
+      "rtu": ["run scripts/rtu.exs"],
+      "modport": ["run scripts/modport.exs"],
     ]
   end
 end

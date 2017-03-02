@@ -1,4 +1,4 @@
-defmodule Baud.Rtu do
+defmodule Modbus.Rtu.Master do
   @moduledoc """
     RTU module.
 
@@ -41,17 +41,21 @@ defmodule Baud.Rtu do
     Returns `:ok`.
   """
   def stop(pid) do
-    Agent.stop(pid)
+    Agent.get(pid, fn nid ->
+      :ok = Baud.Nif.close nid
+    end, @to)
+  Agent.stop(pid)
   end
 
   def exec(pid, cmd, timeout \\ @to) do
     Agent.get(pid, fn nid ->
       now = :erlang.monotonic_time :milli_seconds
-      dl =  now + timeout      
+      dl =  now + timeout
       request = Rtu.pack_req(cmd)
       length = Rtu.res_len(cmd)
       :ok = Baud.Nif.write nid, request
       response = read_n(nid, [], 0, length, dl)
+      ^length = byte_size(response)
       values = Rtu.parse_res(cmd, response)
       case values do
         nil -> :ok

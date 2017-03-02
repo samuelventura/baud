@@ -1,7 +1,7 @@
 defmodule Baud do
   @moduledoc """
     Serial port module.
-    
+
     ```elixir
     tty = case :os.type() do
       {:unix, :darwin} -> "cu.usbserial-FTYHQD9MA"
@@ -72,6 +72,9 @@ defmodule Baud do
     Returns `:ok`.
   """
   def stop(pid) do
+    Agent.get(pid, fn {nid, _} ->
+      :ok = Baud.Nif.close nid
+    end, @to)
     Agent.stop(pid)
   end
 

@@ -4,7 +4,6 @@ tty = case :os.type() do
   {:win32, :nt} -> "COM12"
 end
 
-#Do not prepend /dev/ to the port name
 #Try this with a loopback
 {:ok, pid} = Baud.start_link([device: tty])
 
