@@ -1,3 +1,4 @@
+ExUnit.start()
 
 defmodule Baud.TestHelper do
 
@@ -30,5 +31,3 @@ defmodule Baud.TestHelper do
   end
 
 end
-
-ExUnit.start()

@@ -1,4 +1,4 @@
-defmodule Baud do
+defmodule Baud.Rtu do
   @moduledoc """
     RTU module.
 
@@ -6,6 +6,7 @@ defmodule Baud do
 
     ```
   """
+  alias Modbus.Rtu
 
   @doc """
   Starts the RTU server.
@@ -44,21 +45,17 @@ defmodule Baud do
   end
 
   def exec(pid, cmd, timeout \\ @to) do
-    pack = Modbus.Request.pack(cmd)
-    res = Modbus.Rtu.wrap(pack)
-    count = Modbus.Response.length(cmd)
     Agent.get(pid, fn nid ->
       now = :erlang.monotonic_time :milli_seconds
-      case read_n(nid, [], 0, count, dl) do
-        {:ok, data} ->
-          resp = Modbus.Rtu.unwrap(data)
-          values = Modbus.Response.parse(cmd, resp)
-          case values do
-            nil -> :ok
-            _ -> {:ok, values}
-          end
-        {:to, data} -> {:to, data}
-        {:er, data} -> {:er, data}
+      dl =  now + timeout      
+      request = Rtu.pack_req(cmd)
+      length = Rtu.res_len(cmd)
+      :ok = Baud.Nif.write nid, request
+      response = read_n(nid, [], 0, length, dl)
+      values = Rtu.parse_res(cmd, response)
+      case values do
+        nil -> :ok
+        _ -> {:ok, values}
       end
     end, 2*timeout)
   end
@@ -73,7 +70,7 @@ defmodule Baud do
 
   defp read_n(nid, iol, size, count, dl) do
     case size >= count do
-      true -> split_c iol, count
+      true -> flat iol
       false ->
         {:ok, data} = Baud.Nif.read nid
         case data do
@@ -81,13 +78,18 @@ defmodule Baud do
             :timer.sleep @sleep
             now = :erlang.monotonic_time :milli_seconds
             case now > dl do
-              true -> {:to, all(iol), <<>>}
+              true -> flat iol
               false -> read_n(nid, iol, size, count, dl)
             end
           _ -> read_n(nid, [data | iol], size + byte_size(data),
             count, dl)
         end
     end
+  end
+
+  defp flat(list) do
+    reversed = Enum.reverse list
+    :erlang.iolist_to_binary(reversed)
   end
 
 end

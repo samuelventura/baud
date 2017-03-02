@@ -17,7 +17,7 @@ defmodule Baud.NifLeakTest do
       for _<-0..10 do
         {:ok, nid0} = Baud.Nif.open tty0, 115200, "8N1"
         {:ok, nid1} = Baud.Nif.open tty1, 115200, "8N1"
-        for _<-0..100 do
+        for _<-0..10 do
           :ok = Baud.Nif.write nid0, "echo"
           wait(nid1, "echo")
         end
@@ -45,7 +45,7 @@ defmodule Baud.NifLeakTest do
     :erlang.garbage_collect pid
     :timer.sleep 200
     {:memory, mem2} = :erlang.process_info pid, :memory
-    IO.puts "start:#{mem0} end:#{mem1} final:#{mem2}"
+    IO.puts "mem start:#{mem0} end:#{mem1} final:#{mem2}"
     assert mem0 == mem2
   end
 
