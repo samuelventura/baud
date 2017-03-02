@@ -113,7 +113,7 @@ Elixir Serial Port with Modbus RTU.
 
 0.4.0
 
-- [x] Added sample scripts (1 y 2)
+- [x] Added sample script (1 y 2)
 - [x] Improved documentation
 - [x] Update to modbus 0.2.0 (refactoring required)
 
