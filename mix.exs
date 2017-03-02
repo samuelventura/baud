@@ -31,6 +31,7 @@ defmodule Baud.Mixfile do
 
   defp deps do
     [
+      {:ex_doc, "~> 0.12", only: :dev},
     ]
   end
 
@@ -49,7 +50,7 @@ defmodule Baud.Mixfile do
 
   defp aliases do
     [
-      "sample": ["run scripts/sample.exs"],
+      "baud": ["run scripts/baud.exs"],
     ]
   end
 end
