@@ -12,7 +12,7 @@ defmodule Baud.NifKillTest do
       end
     end)
     send pid, self()
-    assert_receive :ok
+    assert_receive :ok, 800
     :timer.sleep 200
     {:ok, _nid0} = Baud.Nif.open tty0, 115200, "8N1"
   end

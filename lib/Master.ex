@@ -33,10 +33,10 @@ defmodule Modbus.Rtu.Master do
   end
 
   @sleep 1
-  @to 400
+  @to 800
 
   @doc """
-    Stops the serial server.
+    Stops the RTU server.
 
     Returns `:ok`.
   """

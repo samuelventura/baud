@@ -31,7 +31,7 @@ defmodule Baud.Mixfile do
 
   defp deps do
     [
-      {:modbus, "~> 0.3.3"},
+      {:modbus, "~> 0.3.4"},
       {:ex_doc, "~> 0.12", only: :dev},
     ]
   end

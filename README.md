@@ -59,13 +59,14 @@ Elixir Serial Port with Modbus RTU.
   4. Interact with your **RTU** devices.
 
     ```elixir    
+    alias Modbus.Rtu.Master
+
     tty = case :os.type() do
-      {:unix, :darwin} -> "cu.usbserial-FTYHQD9MA"
+      {:unix, :darwin} -> "cu.usbserial-FTVFV143"
       {:unix, :linux} -> "ttyUSB0"
-      {:win32, :nt} -> "COM12"
+      {:win32, :nt} -> "COM10"
     end
 
-    alias Modbus.Rtu.Master
     #rs485 usb adapter to modport
     {:ok, pid} = Master.start_link([device: tty, speed: 57600])
     #force 0 to coil at slave 1 address 3000
@@ -91,7 +92,7 @@ Elixir Serial Port with Modbus RTU.
 
 0.5.0
 
-- [ ] Posix NIF implementation
+- [x] Posix NIF implementation
 - [x] Win32 NIF implementation
 - [x] Baud api simplification
 - [x] Refactored to NIF for improved speed and test isolation

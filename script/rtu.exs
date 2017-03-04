@@ -7,7 +7,7 @@ tty = case :os.type() do
 end
 
 #rs485 usb adapter to modport
-{:ok, pid} = Master.start_link([portname: tty, baudrate: 57600])
+{:ok, pid} = Master.start_link([device: tty, speed: 57600])
 #force 0 to coil at slave 1 address 3000
 :ok = Master.exec pid, {:fc, 1, 3000, 0}
 #read 0 from coil at slave 1 address 3000
