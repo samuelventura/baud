@@ -11,4 +11,4 @@ cd %~dp0
 :COMP
 if not exist obj mkdir obj
 if not exist priv mkdir priv
-call nmake /F NMakefile %*
+call nmake /F make.win %*

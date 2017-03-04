@@ -50,7 +50,7 @@ void serial_open(BAUD_RESOURCE *res, int speed) {
   } else if (speed == 256000) {
     dcb.BaudRate = CBR_256000;
   } else {
-    res->error = "Invalid BaudRate";
+    res->error = "Invalid speed";
     return;
   }
 
@@ -106,6 +106,11 @@ void serial_read(BAUD_RESOURCE *res, unsigned char *buffer, COUNT size) {
 
   if (!ReadFile(res->handle, buffer, size, &count, NULL)) {
     res->error = "ReadFile failed";
+    return;
+  }
+
+  if (size != count) {
+    res->error = "ReadFile mismatch";
     return;
   }
 

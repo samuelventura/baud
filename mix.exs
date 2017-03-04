@@ -1,8 +1,8 @@
 defmodule Mix.Tasks.Compile.Nif do
   def run(_) do
     case :os.type() do
-      {:unix, :darwin} -> 0 = Mix.Shell.IO.cmd("make")
-      {:unix, :linux} -> 0 = Mix.Shell.IO.cmd("make")
+      {:unix, :darwin} -> 0 = Mix.Shell.IO.cmd("make -f make.posix")
+      {:unix, :linux} -> 0 = Mix.Shell.IO.cmd("make -f make.posix")
       {:win32, :nt} -> 0 = Mix.Shell.IO.cmd("build")
     end
     :ok
@@ -31,7 +31,7 @@ defmodule Baud.Mixfile do
 
   defp deps do
     [
-      {:modbus, "~> 0.3.2"},
+      {:modbus, "~> 0.3.3"},
       {:ex_doc, "~> 0.12", only: :dev},
     ]
   end
@@ -43,7 +43,7 @@ defmodule Baud.Mixfile do
   defp package do
     [
      name: :baud,
-     files: ["lib", "test", "script", "src", "Makefile", "mix.*", "*.exs", ".gitignore", "LICENSE"],
+     files: ["lib", "test", "script", "src", "make.*", "*.bat", "mix.*", "*.exs", ".gitignore", "LICENSE"],
      maintainers: ["Samuel Ventura"],
      licenses: ["Apache 2.0"],
      links: %{"GitHub" => "https://github.com/samuelventura/baud/"}]

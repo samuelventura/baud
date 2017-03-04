@@ -14,9 +14,13 @@ defmodule Baud.NifErrorTest do
     case :os.type() do
       {:win32, :nt} ->
         {:er, 'CreateFile failed'} = Baud.Nif.open bin(250), 9600, "8N1"
-        {:er, 'Invalid BaudRate'} = Baud.Nif.open tty0, 9601, "8N1"
-        {:er, 'Invalid config'} = Baud.Nif.open tty0, 9600, "8NX"
+      {:unix, :darwin} ->
+        {:er, 'open failed'} = Baud.Nif.open bin(250), 9600, "8N1"
+      {:unix, :linux} ->
+        {:er, 'open failed'} = Baud.Nif.open bin(250), 9600, "8N1"
     end
+    {:er, 'Invalid speed'} = Baud.Nif.open tty0, 9601, "8N1"
+    {:er, 'Invalid config'} = Baud.Nif.open tty0, 9600, "8NX"
     {:ok, nid0} = Baud.Nif.open tty0, 115200, "8N1"
     {:er, 'Argument 0 is not a resource'} = Baud.Nif.read nil
     {:er, 'Argument 0 is not a resource'} = Baud.Nif.write nil, nil

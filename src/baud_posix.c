@@ -11,19 +11,29 @@
 #include <termios.h>
 #include <unistd.h>
 
-int serial_open(BAUD_RESOURCE *res, int speed) {
-
-  struct termios fdt = {0};
+void serial_open(BAUD_RESOURCE *res, int speed) {
+  res->error = NULL;
+  struct termios fdt;
+  memset(&fdt, 0, sizeof(fdt));
   res->fd = -1;
-  snprintf(res->path, MAXPATH + 1, "/dev/%s", res->device);
+  int count = snprintf(res->path, MAXPATH + 1, "/dev/%s", res->device);
+  if (count <= 0 || count > MAXPATH) {
+    res->error = "Path formatting failed";
+    return;
+  }
   res->fd = open(res->path, O_RDWR | O_NOCTTY);
-
-  if (res->fd < 0)
-    return -1;
-  if (isatty(res->fd) < 0)
-    return -1;
-  if (tcgetattr(res->fd, &fdt) < 0)
-    return -1;
+  if (res->fd < 0) {
+    res->error = "open failed";
+    return;
+  }
+  if (isatty(res->fd) < 0) {
+    res->error = "isatty failed";
+    return;
+  }
+  if (tcgetattr(res->fd, &fdt) < 0) {
+    res->error = "tcgetattr failed";
+    return;
+  }
 
   fdt.c_cflag |= CLOCAL | CREAD;
   fdt.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
@@ -56,8 +66,10 @@ int serial_open(BAUD_RESOURCE *res, int speed) {
   } else if (speed == 115200) {
     cfsetispeed(&fdt, B115200);
     cfsetospeed(&fdt, B115200);
-  } else
-    return -1;
+  } else {
+    res->error = "Invalid speed";
+    return;
+  }
 
   // config
   if (strcmp(res->config, "8N1") == 0) {
@@ -82,40 +94,75 @@ int serial_open(BAUD_RESOURCE *res, int speed) {
     fdt.c_cflag |= CS7;
     fdt.c_iflag |= INPCK;
     fdt.c_iflag |= ISTRIP;
-  } else
-    return -1;
+  } else {
+    res->error = "Invalid config";
+    return;
+  }
 
   // non-blocking
   fdt.c_cc[VTIME] = 0;
   fdt.c_cc[VMIN] = 0;
 
-  if (tcsetattr(res->fd, TCSANOW, &fdt) < 0)
-    return -1;
-
-  return 0;
+  if (tcsetattr(res->fd, TCSANOW, &fdt) < 0) {
+    res->error = "tcsetattr failed";
+    return;
+  }
 }
 
-size_t serial_available(BAUD_RESOURCE *res) {
+void serial_available(BAUD_RESOURCE *res) {
+  res->error = NULL;
   size_t count = 0;
-  if (ioctl(res->fd, FIONREAD, &count) < 0)
-    return -1;
-  return count;
+  if (ioctl(res->fd, FIONREAD, &count) < 0) {
+    res->error = "ioctl failed";
+    return;
+  }
+  res->count = count;
 }
 
-size_t serial_read(BAUD_RESOURCE *res, unsigned char *buffer, int size) {
-  return read(res->fd, buffer, size);
+void serial_read(BAUD_RESOURCE *res, unsigned char *buffer, COUNT size) {
+  res->error = NULL;
+  int count = read(res->fd, buffer, size);
+
+  if (count < 0) {
+    res->error = "read failed";
+    return;
+  }
+
+  if (size != count) {
+    res->error = "read mismatch";
+    return;
+  }
+
+  res->count = count;
 }
 
-size_t serial_write(BAUD_RESOURCE *res, unsigned char *buffer, int size) {
-  return write(res->fd, buffer, size);
+void serial_write(BAUD_RESOURCE *res, unsigned char *buffer, COUNT size) {
+  res->error = NULL;
+  int count = write(res->fd, buffer, size);
+
+  if (count < 0) {
+    res->error = "write failed";
+    return;
+  }
+
+  if (size != count) {
+    res->error = "write mismatch";
+    return;
+  }
+
+  res->count = count;
 }
 
-int serial_close(BAUD_RESOURCE *res) {
+void serial_close(BAUD_RESOURCE *res) {
+  res->error = NULL;
   int fd = res->fd;
   res->fd = -1;
-  if (fd < 0)
-    return -1;
-  if (close(fd) < 0)
-    return -1;
-  return 0;
+  if (fd < 0) {
+    res->error = "fd already closed";
+    return;
+  }
+  if (close(fd) < 0) {
+    res->error = "close failed";
+    return;
+  }
 }
