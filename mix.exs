@@ -1,8 +1,8 @@
 defmodule Mix.Tasks.Compile.Nif do
   def run(_) do
     case :os.type() do
-      {:unix, :darwin} -> 0 = Mix.Shell.IO.cmd("make -f make.posix")
-      {:unix, :linux} -> 0 = Mix.Shell.IO.cmd("make -f make.posix")
+      {:unix, :darwin} -> 0 = Mix.Shell.IO.cmd("make -f make.darwin")
+      {:unix, :linux} -> 0 = Mix.Shell.IO.cmd("make -f make.linux")
       {:win32, :nt} -> 0 = Mix.Shell.IO.cmd("build")
     end
     :ok
