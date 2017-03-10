@@ -2,6 +2,8 @@
 
 Elixir Serial Port with Modbus RTU.
 
+For modbus TCP see [modbus](https://github.com/samuelventura/modbus).
+
 ## Installation and Usage
 
   1. Add `baud` to your list of dependencies in `mix.exs`:
