@@ -137,30 +137,7 @@ Elixir Serial Port with Modbus RTU.
 - [x] Cross platform native serial port (mac, win, linux)
 - [x] Modbus (tcu-rtu), raw and text loop mode
 
-## Development
-
-- Use clang-format atom package
-
 ## Research
 
-- [ ] Support udoo neo
-- [ ] Support beaglebone black
-- [ ] Support raspberry pi 3 B
-- [ ] Assess rewriting the windows native code using the win32 api
-- [ ] Assess rewriting the windows native code using c#/.net
-- [ ] Split into a core package and OS dependant packages holding native code
-- [ ] loop* tests still show data corruption when run all at once
-- [ ] Implement Modbus ASCII support (no available device)
-- [ ] Implement DTR/RTS control and CTS/DSR monitoring
-- [ ] Implement separate discard for input and output buffers
-- [ ] Unit test 8N1 7E1 7O1 and baud rate setup against a confirmed gauge
-- [ ] Get port names required for unit testing from environment variables
-- [ ] Implement a clean exit to loop mode for a timely port close and to ensure test isolation
-- [ ] Improve debugging: stderr messages are interlaced in mix test output
-- [ ] Improve debugging: dev/test/prod conditional output
-- [ ] Move from polling to overlapped on Windows
-- [ ] Research why interchar timeout is applied when reading a single byte even having many already in the input buffer. Happens on MAC.
-- [ ] Research how to bypass the 0.1s minimum granularity on posix systems
-- [ ] Research higher baud rates support for posix and win32
-- [ ] Research Mix unit test isolation (OS resources cleanup)
-- [ ] Research printf to embed variable sized arrays as hex strings
+- Implement Modbus ASCII support (no available device)
+- Get port names required for unit testing from environment variables
