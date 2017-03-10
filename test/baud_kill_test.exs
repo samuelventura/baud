@@ -1,10 +1,10 @@
 defmodule Baud.KillTest do
   use ExUnit.Case
-  alias Baud.TestHelper
+  alias Baud.TTY
 
   test "kill test" do
     Process.flag(:trap_exit, true)
-    tty0 = TestHelper.tty0
+    tty0 = TTY.name 0
     {:ok, pid0} = Baud.start_link [device: tty0]
     Baud.write pid0, "hello"
     Process.exit(pid0, :kill)

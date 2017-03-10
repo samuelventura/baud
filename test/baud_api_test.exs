@@ -1,10 +1,10 @@
 defmodule Baud.ApiTest do
   use ExUnit.Case
-  alias Baud.TestHelper
+  alias Baud.TTY
 
   test "api test" do
-    tty0 = TestHelper.tty0
-    tty1 = TestHelper.tty1
+    tty0 = TTY.name 0
+    tty1 = TTY.name 1
     {:ok, pid0} = Baud.start_link [device: tty0]
     {:ok, pid1} = Baud.start_link [device: tty1]
 

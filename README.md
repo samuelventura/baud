@@ -88,6 +88,7 @@ Elixir Serial Port with Modbus RTU.
 0.5.1
 
 - [ ] Remote compile mix task to Linux & Windows
+- [x] Extract NIF to its own repo (sniff)
 - [ ] Document deploy dependencies
 
 0.5.0

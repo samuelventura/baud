@@ -1,14 +1,3 @@
-defmodule Mix.Tasks.Compile.Nif do
-  def run(_) do
-    case :os.type() do
-      {:unix, :darwin} -> 0 = Mix.Shell.IO.cmd("make -f make.darwin")
-      {:unix, :linux} -> 0 = Mix.Shell.IO.cmd("make -f make.linux")
-      {:win32, :nt} -> 0 = Mix.Shell.IO.cmd("build")
-    end
-    :ok
-  end
-end
-
 defmodule Baud.Mixfile do
   use Mix.Project
 
@@ -16,7 +5,7 @@ defmodule Baud.Mixfile do
     [app: :baud,
      version: "0.5.0",
      elixir: "~> 1.3",
-     compilers: [:nif | Mix.compilers],
+     compilers: Mix.compilers,
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      aliases: aliases(),
@@ -31,6 +20,7 @@ defmodule Baud.Mixfile do
 
   defp deps do
     [
+      {:sniff, "~> 0.1.0"},
       {:modbus, "~> 0.3.4"},
       {:ex_doc, "~> 0.12", only: :dev},
     ]

@@ -1,13 +1,13 @@
 defmodule Modbus.Rtu.MasterTest do
   use ExUnit.Case
-  alias Baud.TestHelper
+  alias Baud.TTY
   alias Modbus.Model
   alias Modbus.Rtu.Master
   alias Modbus.Rtu
 
-  test "rtu test" do
-    tty0 = TestHelper.tty0
-    tty1 = TestHelper.tty1
+  test "master test" do
+    tty0 = TTY.name 0
+    tty1 = TTY.name 1
     {:ok, pid0} = Master.start_link [device: tty0]
     {:ok, pid1} = Baud.start_link [device: tty1]
 

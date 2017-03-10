@@ -73,7 +73,7 @@ defmodule Baud do
   """
   def stop(pid) do
     Agent.get(pid, fn {nid, _} ->
-      :ok = Baud.Nif.close nid
+      :ok = Sniff.close nid
     end, @to)
     Agent.stop(pid)
   end
@@ -85,7 +85,7 @@ defmodule Baud do
   """
   def write(pid, data, timeout \\ @to) do
     Agent.get(pid, fn {nid, _} ->
-      :ok = Baud.Nif.write nid, data
+      :ok = Sniff.write nid, data
     end, timeout)
   end
 
@@ -96,7 +96,7 @@ defmodule Baud do
   """
   def readall(pid, timeout \\ @to) do
     Agent.get_and_update(pid, fn {nid, buf} ->
-      {:ok, data} = Baud.Nif.read nid
+      {:ok, data} = Sniff.read nid
       all = buf <> data
       {{:ok, all}, {nid, <<>>}}
     end, 2*timeout)
@@ -154,7 +154,7 @@ defmodule Baud do
     device = Keyword.fetch!(params, :device)
     speed = Keyword.get(params, :speed, 115200)
     config = Keyword.get(params, :config, "8N1")
-    {:ok, nid} = Baud.Nif.open device, speed, config
+    {:ok, nid} = Sniff.open device, speed, config
     {nid, <<>>}
   end
 
@@ -162,7 +162,7 @@ defmodule Baud do
     case index >= 0 do
       true -> split_i iol, index
       false ->
-        {:ok, data} = Baud.Nif.read nid
+        {:ok, data} = Sniff.read nid
         case data do
           <<>> ->
             :timer.sleep @sleep
@@ -186,7 +186,7 @@ defmodule Baud do
     case size >= count do
       true -> split_c iol, count
       false ->
-        {:ok, data} = Baud.Nif.read nid
+        {:ok, data} = Sniff.read nid
         case data do
           <<>> ->
             :timer.sleep @sleep

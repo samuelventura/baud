@@ -42,7 +42,7 @@ defmodule Modbus.Rtu.Master do
   """
   def stop(pid) do
     Agent.get(pid, fn nid ->
-      :ok = Baud.Nif.close nid
+      :ok = Sniff.close nid
     end, @to)
   Agent.stop(pid)
   end
@@ -53,7 +53,7 @@ defmodule Modbus.Rtu.Master do
       dl =  now + timeout
       request = Rtu.pack_req(cmd)
       length = Rtu.res_len(cmd)
-      :ok = Baud.Nif.write nid, request
+      :ok = Sniff.write nid, request
       response = read_n(nid, [], 0, length, dl)
       ^length = byte_size(response)
       values = Rtu.parse_res(cmd, response)
@@ -68,7 +68,7 @@ defmodule Modbus.Rtu.Master do
     device = Keyword.fetch!(params, :device)
     speed = Keyword.get(params, :speed, 115200)
     config = Keyword.get(params, :config, "8N1")
-    {:ok, nid} = Baud.Nif.open device, speed, config
+    {:ok, nid} = Sniff.open device, speed, config
     nid
   end
 
@@ -76,7 +76,7 @@ defmodule Modbus.Rtu.Master do
     case size >= count do
       true -> flat iol
       false ->
-        {:ok, data} = Baud.Nif.read nid
+        {:ok, data} = Sniff.read nid
         case data do
           <<>> ->
             :timer.sleep @sleep
