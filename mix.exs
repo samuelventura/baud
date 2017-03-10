@@ -33,7 +33,7 @@ defmodule Baud.Mixfile do
   defp package do
     [
      name: :baud,
-     files: ["lib", "test", "script", "make.*", "*.sh", "mix.*", "*.md", ".gitignore", "LICENSE"],
+     files: ["lib", "test", "script", "*.sh", "mix.*", "*.md", ".gitignore", "LICENSE"],
      maintainers: ["Samuel Ventura"],
      licenses: ["Apache 2.0"],
      links: %{"GitHub" => "https://github.com/samuelventura/baud/"}]
