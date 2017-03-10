@@ -15,7 +15,7 @@ Elixir Serial Port with Modbus RTU.
   2. Enumerate your serial ports.
 
     ```elixir
-    ["COM1", "ttyUSB0", "cu.usbserial-FTVFV143"] = Baud.Enum.list()
+    ["COM1", "ttyUSB0", "cu.usbserial-FTVFV143"] = Baud.Enum.list
     ```
 
   3. Interact with your serial port.
