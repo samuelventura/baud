@@ -33,7 +33,7 @@ defmodule Baud.Mixfile do
   defp package do
     [
      name: :baud,
-     files: ["lib", "test", "script", "src", "make.*", "*.bat", "mix.*", "*.exs", ".gitignore", "LICENSE"],
+     files: ["lib", "test", "script", "make.*", "*.sh", "mix.*", "*.md", ".gitignore", "LICENSE"],
      maintainers: ["Samuel Ventura"],
      licenses: ["Apache 2.0"],
      links: %{"GitHub" => "https://github.com/samuelventura/baud/"}]
@@ -42,7 +42,7 @@ defmodule Baud.Mixfile do
   defp aliases do
     [
       "baud": ["run script/baud.exs"],
-      "rtu": ["run script/rtu.exs"],
+      "master": ["run script/master.exs"],
       "modport": ["run script/modport.exs"],
     ]
   end
