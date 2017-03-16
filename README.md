@@ -2,7 +2,8 @@
 
 Elixir Serial Port with Modbus RTU.
 
-For modbus TCP see [modbus](https://github.com/samuelventura/modbus).
+- For modbus TCP see [modbus](https://github.com/samuelventura/modbus).
+- For low level serial port NIF see [sniff](https://github.com/samuelventura/sniff).
 
 ## Installation and Usage
 
