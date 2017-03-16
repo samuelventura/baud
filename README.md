@@ -89,9 +89,9 @@ For modbus TCP see [modbus](https://github.com/samuelventura/modbus).
 
 0.5.1
 
-- [ ] Remote compile mix task to Linux & Windows
-- [x] Extract NIF to its own repo (sniff)
 - [ ] Document deployment dependencies
+- [x] Automatic test against Ubuntu 16 & Windows 10
+- [x] Extract NIF to its own repo (sniff)
 
 0.5.0
 
