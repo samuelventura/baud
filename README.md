@@ -8,7 +8,7 @@ Elixir Serial Port with Modbus RTU.
 
     ```elixir
     def deps do
-      [{:baud, "~> 0.5.0"}]
+      [{:baud, "~> 0.5.1"}]
     end
     ```
 
@@ -85,11 +85,15 @@ Elixir Serial Port with Modbus RTU.
 
 ## Roadmap
 
-0.5.1
+0.5.2
 
 - [ ] Remote compile mix task to Linux & Windows
-- [x] Extract NIF to its own repo (sniff)
 - [ ] Document deploy dependencies
+
+0.5.1
+
+- [x] Updated to sniff 0.1.1
+- [x] Extract NIF to its own repo (sniff)
 
 0.5.0
 
