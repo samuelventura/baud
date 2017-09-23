@@ -141,10 +141,6 @@ Elixir Serial Port with Modbus RTU.
 - [x] Cross platform native serial port (mac, win, linux)
 - [x] Modbus (tcu-rtu), raw and text loop mode
 
-## Development
-
-- Use clang-format atom package
-
 ## Research
 
 - [ ] Support udoo neo
