@@ -1,4 +1,4 @@
 %{"earmark": {:hex, :earmark, "1.1.1", "433136b7f2e99cde88b745b3a0cfc3fbc81fe58b918a09b40fce7f00db4d8187", [:mix], []},
   "ex_doc": {:hex, :ex_doc, "0.15.0", "e73333785eef3488cf9144a6e847d3d647e67d02bd6fdac500687854dd5c599f", [:mix], [{:earmark, "~> 1.1", [hex: :earmark, optional: false]}]},
-  "modbus": {:hex, :modbus, "0.3.4", "4ee2636c9b5ed663720de884d414e9574b86fad8ab4ca54ceacb7f200b5a0d16", [:mix], []},
-  "sniff": {:hex, :sniff, "0.1.1", "be20a3ece9dc8f65e8f36e9826bc344f44ded84d735f25dd3fd7d26c147bba68", [:mix], [], "hexpm"}}
+  "modbus": {:hex, :modbus, "0.3.7", "3b11f700f810de4033f478e55c1c379c89087a60869fa6b18ce9959d9d14ccf1", [:mix], []},
+  "sniff": {:hex, :sniff, "0.1.2", "5e680501713315aea9f98b369fdf18b5b4473f5385dd61a65269f68488b205ac", [:mix], []}}
