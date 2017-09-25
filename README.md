@@ -8,7 +8,7 @@ Elixir Serial Port with Modbus RTU.
 
   ```elixir
   def deps do
-    [{:baud, "~> 0.5.3"}]
+    [{:baud, "~> 0.5.4"}]
   end
   ```
 
@@ -101,9 +101,14 @@ Give yourself access to serial ports with `sudo gpasswd -s samuel dialout`. Foll
 
 ## Roadmap
 
-0.5.4
+Future
 
 - [ ] Remote compile mix task to Linux & Windows
+- [ ] Pass test serial port thru environment variables
+
+0.5.4
+
+- [x] Updated to sniff 0.1.4
 
 0.5.3
 
