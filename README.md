@@ -64,7 +64,7 @@ Elixir Serial Port with Modbus RTU.
   tty = case :os.type() do
     {:unix, :darwin} -> "cu.usbserial-FTVFV143"
     {:unix, :linux} -> "ttyUSB0"
-    {:win32, :nt} -> "COM10"
+    {:win32, :nt} -> "COM5"
   end
 
   #rs485 usb adapter to modport
