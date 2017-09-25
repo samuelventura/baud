@@ -3,8 +3,8 @@ defmodule Baud.ApiTest do
   alias Baud.TTY
 
   test "api test" do
-    tty0 = TTY.name 0
-    tty1 = TTY.name 1
+    tty0 = TTY.tty0
+    tty1 = TTY.tty1
     {:ok, pid0} = Baud.start_link [device: tty0]
     {:ok, pid1} = Baud.start_link [device: tty1]
 

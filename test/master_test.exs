@@ -6,8 +6,8 @@ defmodule Modbus.Rtu.MasterTest do
   alias Modbus.Rtu
 
   test "master test" do
-    tty0 = TTY.name 0
-    tty1 = TTY.name 1
+    tty0 = TTY.tty0
+    tty1 = TTY.tty1
     {:ok, pid0} = Master.start_link [device: tty0]
     {:ok, pid1} = Baud.start_link [device: tty1]
 

@@ -8,7 +8,7 @@ Elixir Serial Port with Modbus RTU.
 
   ```elixir
   def deps do
-    [{:baud, "~> 0.5.2"}]
+    [{:baud, "~> 0.5.3"}]
   end
   ```
 
@@ -83,12 +83,32 @@ Elixir Serial Port with Modbus RTU.
   {:ok, [0x55AA]} = Master.exec pid, {:rhr, 1, 3300, 1}
   ```
 
+## Development
+
+  - Testing requires two null modem serial ports configured in `test/test_helper.exs`
+
+## Windows
+
+Install `Visual C++ 2015 Build Tools` by one of the following methods:
+  - Download and install [visualcppbuildtools_full.exe](http://landinghub.visualstudio.com/visual-cpp-build-tools)
+  - Thru [Chocolatey](https://chocolatey.org/) `choco install VisualCppBuildTools`.
+
+From the Windows run command launch `cmd /K c:\Users\samuel\Documents\github\baud\setenv.bat` adjusting your code location accordingly.
+
+## Ubuntu
+
+Give yourself access to serial ports with `sudo gpasswd -s samuel dialout`. Follow the official Elixir installation instructions and install `build-essential erlang-dev` as well.
+
 ## Roadmap
+
+0.5.4
+
+- [ ] Remote compile mix task to Linux & Windows
 
 0.5.3
 
-- [ ] Remote compile mix task to Linux & Windows
-- [ ] Document deploy dependencies
+- [x] Updated to sniff 0.1.3
+- [x] Document Windows/Ubuntu dependencies
 
 0.5.2
 
