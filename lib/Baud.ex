@@ -6,7 +6,7 @@ defmodule Baud do
     tty = case :os.type() do
       {:unix, :darwin} -> "cu.usbserial-FTYHQD9MA"
       {:unix, :linux} -> "ttyUSB0"
-      {:win32, :nt} -> "COM12"
+      {:win32, :nt} -> "COM5"
     end
 
     #Try this with a loopback

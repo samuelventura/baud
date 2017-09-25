@@ -3,7 +3,7 @@ alias Modbus.Rtu.Master
 tty = case :os.type() do
   {:unix, :darwin} -> "cu.usbserial-FTVFV143"
   {:unix, :linux} -> "ttyUSB0"
-  {:win32, :nt} -> "COM10"
+  {:win32, :nt} -> "COM5"
 end
 
 {:ok, pid} = Master.start_link([device: tty, speed: 57600])

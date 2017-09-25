@@ -20,8 +20,7 @@ defmodule Baud.Mixfile do
 
   defp deps do
     [
-      #{:sniff, "~> 0.1.3"},
-      {:sniff, github:  "samuelventura/sniff"},
+      {:sniff, "~> 0.1.3"},
       {:modbus, "~> 0.3.7"},
       {:ex_doc, "~> 0.12", only: :dev},
     ]
