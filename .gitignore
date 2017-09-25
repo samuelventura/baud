@@ -2,6 +2,6 @@
 /cover
 /deps
 /doc
-erl_crash.dump
+*.dump
 *.ez
 *.tar
