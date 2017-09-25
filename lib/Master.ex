@@ -15,7 +15,7 @@ defmodule Modbus.Rtu.Master do
   ```elixir
   [
     device: nil,         #serial port name: "COM1", "ttyUSB0", "cu.usbserial-FTYHQD9MA"
-    speed: 115200,       #either 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200
+    speed: 9600,       #either 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200
                          #win32 adds 14400, 128000, 256000
     config: "8N1",       #either "8N1", "7E1", "7O1"
   ]
@@ -66,7 +66,7 @@ defmodule Modbus.Rtu.Master do
 
   defp init(params) do
     device = Keyword.fetch!(params, :device)
-    speed = Keyword.get(params, :speed, 115200)
+    speed = Keyword.get(params, :speed, 9600)
     config = Keyword.get(params, :config, "8N1")
     {:ok, nid} = Sniff.open device, speed, config
     nid
