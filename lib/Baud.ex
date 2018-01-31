@@ -109,7 +109,7 @@ defmodule Baud do
   """
   def readn(pid, count, timeout \\ @to) do
     Agent.get_and_update(pid, fn {nid, buf} ->
-      now = :erlang.monotonic_time :milli_seconds
+      now = now()
       size = byte_size(buf)
       dl = now + timeout
       {res, head, tail} = read_n(nid, [buf], size, count, dl)
@@ -124,7 +124,7 @@ defmodule Baud do
   """
   def readln(pid, timeout \\ @to) do
     Agent.get_and_update(pid, fn {nid, buf} ->
-      now = :erlang.monotonic_time :milli_seconds
+      now = now()
       ch = 10;
       index = index(buf, ch)
       size = byte_size(buf)
@@ -141,7 +141,7 @@ defmodule Baud do
   """
   def readch(pid, ch, timeout \\ @to) do
     Agent.get_and_update(pid, fn {nid, buf} ->
-      now = :erlang.monotonic_time :milli_seconds
+      now = now()
       index = index(buf, ch)
       size = byte_size(buf)
       dl =  now + timeout
@@ -166,7 +166,7 @@ defmodule Baud do
         case data do
           <<>> ->
             :timer.sleep @sleep
-            now = :erlang.monotonic_time :milli_seconds
+            now = now()
             case now > dl do
               true -> {:to, all(iol), <<>>}
               false -> read_ch(nid, iol, -1, size, ch, dl)
@@ -190,7 +190,7 @@ defmodule Baud do
         case data do
           <<>> ->
             :timer.sleep @sleep
-            now = :erlang.monotonic_time :milli_seconds
+            now = now()
             case now > dl do
               true -> {:to, all(iol), <<>>}
               false -> read_n(nid, iol, size, count, dl)
@@ -200,6 +200,9 @@ defmodule Baud do
         end
     end
   end
+
+  defp now(), do: :os.system_time :milli_seconds
+  #defp now(), do: :erlang.monotonic_time :milli_seconds
 
   defp index(bin, ch) do
     case :binary.match(bin, <<ch>>) do
