@@ -49,7 +49,7 @@ defmodule Modbus.Rtu.Master do
 
   def exec(pid, cmd, timeout \\ @to) do
     Agent.get(pid, fn nid ->
-      now = :erlang.monotonic_time :milli_seconds
+      now = now()
       dl =  now + timeout
       request = Rtu.pack_req(cmd)
       length = Rtu.res_len(cmd)
@@ -80,7 +80,7 @@ defmodule Modbus.Rtu.Master do
         case data do
           <<>> ->
             :timer.sleep @sleep
-            now = :erlang.monotonic_time :milli_seconds
+            now = now()
             case now > dl do
               true -> flat iol
               false -> read_n(nid, iol, size, count, dl)
@@ -95,5 +95,8 @@ defmodule Modbus.Rtu.Master do
     reversed = Enum.reverse list
     :erlang.iolist_to_binary(reversed)
   end
+
+  defp now(), do: :os.system_time :milli_seconds
+  #defp now(), do: :erlang.monotonic_time :milli_seconds
 
 end

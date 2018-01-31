@@ -13,7 +13,7 @@ end
 {:ok, pid0} = Baud.start_link([device: tty0, speed: 921600])
 {:ok, pid1} = Baud.start_link([device: tty1, speed: 921600])
 
-to = 60
+to = 100
 long = String.duplicate "0123456789", 200
 
 for i <- 1..100000 do
