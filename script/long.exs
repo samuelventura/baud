@@ -13,11 +13,19 @@ end
 {:ok, pid0} = Baud.start_link([device: tty0, speed: 921600])
 {:ok, pid1} = Baud.start_link([device: tty1, speed: 921600])
 
-to = 200
-long = String.duplicate "0123456789", to
+to = 60
+long = String.duplicate "0123456789", 200
 
-for _ <- 1..100000 do
-  :ok = Baud.write pid0, long, 200
-  {:ok, ^long} = Baud.readn pid1, 2000, to
+for i <- 1..100000 do
+  
+  :ok = Baud.write pid0, long, to
+  case Baud.readn pid1, 2000, to do
+    {:ok, ^long} -> :ok #IO.inspect {i, "Packet complete"}
+    {:ok, other} -> IO.inspect {i, "Mismatch", byte_size(other)}
+    {:to, part} -> 
+      IO.inspect {i, "Timeout", byte_size(part)}
+      #discard what was left to start clean
+      :timer.sleep to
+      Baud.readall pid1 
+  end
 end
-
