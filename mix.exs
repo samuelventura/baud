@@ -20,7 +20,7 @@ defmodule Baud.Mixfile do
 
   defp deps do
     [
-      {:sniff, "~> 0.1.4"},
+      {:sniff, git: "https://github.com/samuelventura/sniff.git"},
       {:modbus, "~> 0.3.7"},
       {:ex_doc, "~> 0.12", only: :dev},
     ]
@@ -41,6 +41,7 @@ defmodule Baud.Mixfile do
 
   defp aliases do
     [
+      "long": ["run script/long.exs"],
       "baud": ["run script/baud.exs"],
       "master": ["run script/master.exs"],
       "modport": ["run script/modport.exs"],

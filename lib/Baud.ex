@@ -99,7 +99,7 @@ defmodule Baud do
       {:ok, data} = Sniff.read nid
       all = buf <> data
       {{:ok, all}, {nid, <<>>}}
-    end, 2*timeout)
+    end, timeout)
   end
 
   @doc """
