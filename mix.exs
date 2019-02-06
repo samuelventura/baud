@@ -41,11 +41,11 @@ defmodule Baud.Mixfile do
 
   defp aliases do
     [
-      "tryout": ["run script/tryout.exs"],
-      "long": ["run script/long.exs"],
-      "baud": ["run script/baud.exs"],
-      "master": ["run script/master.exs"],
-      "modport": ["run script/modport.exs"],
+      tryout: ["run script/tryout.exs"],
+      long: ["run script/long.exs"],
+      baud: ["run script/baud.exs"],
+      master: ["run script/master.exs"],
+      modport: ["run script/modport.exs"],
     ]
   end
 end
