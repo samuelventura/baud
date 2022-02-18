@@ -25,7 +25,7 @@ defmodule Modbus.Rtu.Master do
   Returns `{:ok, pid}`.
   ## Example
     ```
-    Rtu.start_link(device: "COM8")
+    Master.start_link(device: "COM8")
     ```
   """
   def start_link(params) do
@@ -50,9 +50,7 @@ defmodule Modbus.Rtu.Master do
   def stop(pid) do
     Agent.get(
       pid,
-      fn nid ->
-        :ok = Sniff.close(nid)
-      end,
+      fn nid -> :ok = Sniff.close(nid) end,
       @to
     )
 
