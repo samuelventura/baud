@@ -83,6 +83,13 @@ Elixir Serial Port with Modbus RTU.
   {:ok, [0x55AA]} = Master.exec pid, {:rhr, 1, 3300, 1}
   ```
 
+## Test
+
+```bash
+# script to setup socat ttys
+./test.sh
+```
+
 ## Windows
 
 Install `Visual C++ 2015 Build Tools` by one of the following methods:
