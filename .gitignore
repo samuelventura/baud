@@ -5,3 +5,4 @@
 *.dump
 *.ez
 *.tar
+.elixir_ls

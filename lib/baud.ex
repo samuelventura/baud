@@ -10,7 +10,7 @@ defmodule Baud do
     end
 
     #Try this with a loopback
-    {:ok, pid} = Baud.start_link([device: tty])
+    {:ok, pid} = Baud.start_link(device: tty)
 
     Baud.write pid, "01234\\n56789\\n98765\\n43210"
     {:ok, "01234\\n"} = Baud.readln pid
@@ -56,14 +56,21 @@ defmodule Baud do
   Returns `{:ok, pid}`.
   ## Example
     ```
-    Baud.start_link([device: "COM8"])
+    Baud.start_link(device: "COM8")
     ```
   """
-  def start_link(params, opts \\ []) do
-      Agent.start_link(fn -> init(params) end, opts)
+  def start_link(opts) do
+    device = Keyword.fetch!(opts, :device)
+    speed = Keyword.get(opts, :speed, 9600)
+    config = Keyword.get(opts, :config, "8N1")
+
+    case Sniff.open(device, speed, config) do
+      {:ok, nid} -> Agent.start_link(fn -> {nid, <<>>} end, opts)
+      other -> other
+    end
   end
 
-  @sleep 1
+  @sleep 10
   @to 400
 
   @doc """
@@ -72,9 +79,14 @@ defmodule Baud do
     Returns `:ok`.
   """
   def stop(pid) do
-    Agent.get(pid, fn {nid, _} ->
-      :ok = Sniff.close nid
-    end, @to)
+    Agent.get(
+      pid,
+      fn {nid, _} ->
+        :ok = Sniff.close(nid)
+      end,
+      @to
+    )
+
     Agent.stop(pid)
   end
 
@@ -84,9 +96,13 @@ defmodule Baud do
   Returns `:ok`.
   """
   def write(pid, data, timeout \\ @to) do
-    Agent.get(pid, fn {nid, _} ->
-      :ok = Sniff.write nid, data
-    end, timeout)
+    Agent.get(
+      pid,
+      fn {nid, _} ->
+        :ok = Sniff.write(nid, data)
+      end,
+      timeout
+    )
   end
 
   @doc """
@@ -95,11 +111,15 @@ defmodule Baud do
   Returns `{:ok, data}`.
   """
   def readall(pid, timeout \\ @to) do
-    Agent.get_and_update(pid, fn {nid, buf} ->
-      {:ok, data} = Sniff.read nid
-      all = buf <> data
-      {{:ok, all}, {nid, <<>>}}
-    end, timeout)
+    Agent.get_and_update(
+      pid,
+      fn {nid, buf} ->
+        {:ok, data} = Sniff.read(nid)
+        all = buf <> data
+        {{:ok, all}, {nid, <<>>}}
+      end,
+      timeout
+    )
   end
 
   @doc """
@@ -108,13 +128,17 @@ defmodule Baud do
   Returns `{:ok, data} | {:to, partial}`.
   """
   def readn(pid, count, timeout \\ @to) do
-    Agent.get_and_update(pid, fn {nid, buf} ->
-      now = now()
-      size = byte_size(buf)
-      dl = now + timeout
-      {res, head, tail} = read_n(nid, [buf], size, count, dl)
-      {{res, head}, {nid, tail}}
-    end, 2*timeout)
+    Agent.get_and_update(
+      pid,
+      fn {nid, buf} ->
+        now = now()
+        size = byte_size(buf)
+        dl = now + timeout
+        {res, head, tail} = read_n(nid, [buf], size, count, dl)
+        {{res, head}, {nid, tail}}
+      end,
+      2 * timeout
+    )
   end
 
   @doc """
@@ -123,15 +147,19 @@ defmodule Baud do
   Returns `{:ok, line} | {:to, partial}`.
   """
   def readln(pid, timeout \\ @to) do
-    Agent.get_and_update(pid, fn {nid, buf} ->
-      now = now()
-      ch = 10;
-      index = index(buf, ch)
-      size = byte_size(buf)
-      dl =  now + timeout
-      {res, head, tail} = read_ch(nid, [buf], index, size, ch, dl)
-      {{res, head}, {nid, tail}}
-    end, 2*timeout)
+    Agent.get_and_update(
+      pid,
+      fn {nid, buf} ->
+        now = now()
+        ch = 10
+        index = index(buf, ch)
+        size = byte_size(buf)
+        dl = now + timeout
+        {res, head, tail} = read_ch(nid, [buf], index, size, ch, dl)
+        {{res, head}, {nid, tail}}
+      end,
+      2 * timeout
+    )
   end
 
   @doc """
@@ -140,43 +168,42 @@ defmodule Baud do
   Returns `{:ok, data} | {:to, partial}`.
   """
   def readch(pid, ch, timeout \\ @to) do
-    Agent.get_and_update(pid, fn {nid, buf} ->
-      now = now()
-      index = index(buf, ch)
-      size = byte_size(buf)
-      dl =  now + timeout
-      {res, head, tail} = read_ch(nid, [buf], index, size, ch, dl)
-      {{res, head}, {nid, tail}}
-    end, 2*timeout)
-  end
-
-  defp init(params) do
-    device = Keyword.fetch!(params, :device)
-    speed = Keyword.get(params, :speed, 9600)
-    config = Keyword.get(params, :config, "8N1")
-    {:ok, nid} = Sniff.open device, speed, config
-    {nid, <<>>}
+    Agent.get_and_update(
+      pid,
+      fn {nid, buf} ->
+        now = now()
+        index = index(buf, ch)
+        size = byte_size(buf)
+        dl = now + timeout
+        {res, head, tail} = read_ch(nid, [buf], index, size, ch, dl)
+        {{res, head}, {nid, tail}}
+      end,
+      2 * timeout
+    )
   end
 
   defp read_ch(nid, iol, index, size, ch, dl) do
     case index >= 0 do
-      true -> split_i iol, index
+      true ->
+        split_i(iol, index)
+
       false ->
-        {:ok, data} = Sniff.read nid
+        {:ok, data} = Sniff.read(nid)
+
         case data do
           <<>> ->
-            :timer.sleep @sleep
+            :timer.sleep(@sleep)
             now = now()
+
             case now > dl do
               true -> {:to, all(iol), <<>>}
               false -> read_ch(nid, iol, -1, size, ch, dl)
             end
+
           _ ->
             case index(data, ch) do
-              -1 -> read_ch(nid, [data | iol], -1,
-                size + byte_size(data), ch, dl)
-              index -> read_ch(nid, [data | iol], size + index,
-                size + byte_size(data), ch, dl)
+              -1 -> read_ch(nid, [data | iol], -1, size + byte_size(data), ch, dl)
+              index -> read_ch(nid, [data | iol], size + index, size + byte_size(data), ch, dl)
             end
         end
     end
@@ -184,25 +211,29 @@ defmodule Baud do
 
   defp read_n(nid, iol, size, count, dl) do
     case size >= count do
-      true -> split_c iol, count
+      true ->
+        split_c(iol, count)
+
       false ->
-        {:ok, data} = Sniff.read nid
+        {:ok, data} = Sniff.read(nid)
+
         case data do
           <<>> ->
-            :timer.sleep @sleep
+            :timer.sleep(@sleep)
             now = now()
+
             case now > dl do
               true -> {:to, all(iol), <<>>}
               false -> read_n(nid, iol, size, count, dl)
             end
-          _ -> read_n(nid, [data | iol], size + byte_size(data),
-            count, dl)
+
+          _ ->
+            read_n(nid, [data | iol], size + byte_size(data), count, dl)
         end
     end
   end
 
-  defp now(), do: :os.system_time :milli_seconds
-  #defp now(), do: :erlang.monotonic_time :milli_seconds
+  defp now(), do: :erlang.monotonic_time(:milli_seconds)
 
   defp index(bin, ch) do
     case :binary.match(bin, <<ch>>) do
@@ -214,8 +245,9 @@ defmodule Baud do
   defp all(bin) when is_binary(bin) do
     bin
   end
+
   defp all(list) when is_list(list) do
-    reversed = Enum.reverse list
+    reversed = Enum.reverse(list)
     :erlang.iolist_to_binary(reversed)
   end
 
@@ -224,8 +256,9 @@ defmodule Baud do
     tail = :binary.part(bin, {index + 1, byte_size(bin) - index - 1})
     {:ok, head, tail}
   end
+
   defp split_i(list, index) when is_list(list) do
-    reversed = Enum.reverse list
+    reversed = Enum.reverse(list)
     bin = :erlang.iolist_to_binary(reversed)
     split_i(bin, index)
   end
@@ -234,10 +267,10 @@ defmodule Baud do
     <<head::bytes-size(count), tail::binary>> = bin
     {:ok, head, tail}
   end
+
   defp split_c(list, count) when is_list(list) do
-    reversed = Enum.reverse list
+    reversed = Enum.reverse(list)
     bin = :erlang.iolist_to_binary(reversed)
     split_c(bin, count)
   end
-
 end

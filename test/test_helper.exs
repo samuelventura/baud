@@ -1,30 +1,32 @@
 defmodule Baud.TTY do
-
-  #Use dual FTDI USB-Serial adapter ICUSB2322F
-  #Connect a null modem cable between them
-  #Shorter is #1
-  #Larger is #2
+  # couple of null modem serial ports needed
   def tty0() do
     case :os.type() do
-      {:unix, :darwin} -> "cu.usbserial-FTYHQD9MA"
-      {:unix, :linux} -> "ttyUSB0"
-      {:win32, :nt} -> "COM5"
+      {:unix, :darwin} -> find("tty.usbserial-", 0)
+      {:unix, :linux} -> find("ttyUSB", 0)
+      {:win32, :nt} -> "COM10"
     end
   end
 
   def tty1() do
     case :os.type() do
-      {:unix, :darwin} -> "cu.usbserial-FTYHQD9MB"
-      {:unix, :linux} -> "ttyUSB1"
-      {:win32, :nt} -> "COM6"
+      {:unix, :darwin} -> find("tty.usbserial-", 1)
+      {:unix, :linux} -> find("ttyUSB", 1)
+      {:win32, :nt} -> "COM11"
     end
   end
 
-  def full(tty) do
-    case :os.type() do
-      {:unix, :darwin} -> "/dev/" <> tty
-      {:unix, :linux} -> "/dev/" <> tty
-      {:win32, :nt} -> tty
+  defp find(prefix, index) do
+    list = Path.wildcard("/dev/#{prefix}*")
+
+    case index do
+      0 ->
+        [first | _] = list
+        Path.basename(first)
+
+      1 ->
+        [_, second | _] = list
+        Path.basename(second)
     end
   end
 end
