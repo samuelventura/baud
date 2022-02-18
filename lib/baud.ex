@@ -4,8 +4,8 @@ defmodule Baud do
 
     ```elixir
     tty = case :os.type() do
-      {:unix, :darwin} -> "cu.usbserial-FTYHQD9MA"
-      {:unix, :linux} -> "ttyUSB0"
+      {:unix, :darwin} -> "/dev/tty.usbserial-FTYHQD9MA"
+      {:unix, :linux} -> "/dev/ttyUSB0"
       {:win32, :nt} -> "COM5"
     end
 
@@ -45,7 +45,7 @@ defmodule Baud do
   `params` *must* contain a keyword list to be merged with the following defaults:
   ```elixir
   [
-    device: nil,         #serial port name: "COM1", "ttyUSB0", "cu.usbserial-FTYHQD9MA"
+    device: nil,         #serial port name: "COM1", "/dev/ttyUSB0", "/dev/tty.usbserial-FTYHQD9MA"
     speed: 9600,       #either 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200
                          #win32 adds 14400, 128000, 256000
     config: "8N1",       #either "8N1", "7E1", "7O1"

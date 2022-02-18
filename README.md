@@ -15,15 +15,15 @@ Elixir Serial Port with Modbus RTU.
   2. Enumerate your serial ports.
 
   ```elixir
-  ["COM1", "ttyUSB0", "cu.usbserial-FTVFV143"] = Baud.Enum.list()
+  ["COM1", "/dev/ttyUSB0", "/dev/tty.usbserial-FTVFV143"] = Baud.Enum.list()
   ```
 
   3. Interact with your serial port.
 
   ```elixir
   tty = case :os.type() do
-    {:unix, :darwin} -> "cu.usbserial-FTYHQD9MA"
-    {:unix, :linux} -> "ttyUSB0"
+    {:unix, :darwin} -> "/dev/tty.usbserial-FTYHQD9MA"
+    {:unix, :linux} -> "/dev/ttyUSB0"
     {:win32, :nt} -> "COM5"
   end
 
@@ -62,8 +62,8 @@ Elixir Serial Port with Modbus RTU.
   alias Modbus.Rtu.Master
 
   tty = case :os.type() do
-    {:unix, :darwin} -> "cu.usbserial-FTVFV143"
-    {:unix, :linux} -> "ttyUSB0"
+    {:unix, :darwin} -> "/dev/tty.usbserial-FTVFV143"
+    {:unix, :linux} -> "/dev/ttyUSB0"
     {:win32, :nt} -> "COM5"
   end
 
@@ -83,10 +83,6 @@ Elixir Serial Port with Modbus RTU.
   {:ok, [0x55AA]} = Master.exec pid, {:rhr, 1, 3300, 1}
   ```
 
-## Development
-
-  - Testing requires two null modem serial ports configured in `test/test_helper.exs`
-
 ## Windows
 
 Install `Visual C++ 2015 Build Tools` by one of the following methods:
@@ -99,12 +95,22 @@ From the Windows run command launch `cmd /K c:\Users\samuel\Documents\github\bau
 
 Give yourself access to serial ports with `sudo gpasswd -s samuel dialout`. Follow the official Elixir installation instructions and install `build-essential erlang-dev` as well.
 
+## MacOS
+
+Give yourself access to serial ports with `sudo dseditgroup -o edit -a samuel -t user wheel`.
+
 ## Roadmap
 
 Future
 
 - [ ] Remote compile mix task to Linux & Windows
-- [ ] Pass test serial port thru environment variables
+
+0.5.6
+
+- [x] Updated to sniff 0.1.6 (bug fix)
+- [x] Test with fake socat ttys
+- [x] Full posix tty paths required
+- [x] Pass test serial port thru environment variables
 
 0.5.4
 

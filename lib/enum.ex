@@ -14,7 +14,7 @@ defmodule Baud.Enum do
 
   @doc """
   Lists the names of the available serial ports.
-  Returns: `["COM1", "ttyUSB0", "cu.usbserial-FTYHQD9MA"]`
+  Returns: `["COM1", "/dev/ttyUSB0", "/dev/tty.usbserial-FTYHQD9MA"]`
   """
   def list() do
     # http://stackoverflow.com/questions/33461345/how-can-i-get-the-current-operating-system-name-in-elixir
@@ -30,14 +30,14 @@ defmodule Baud.Enum do
   defp list({:unix, :darwin}) do
     for file <- File.ls!(@dev),
         Regex.match?(@darwinre, file) do
-      file
+      Path.join(@dev, file)
     end
   end
 
   defp list({:unix, :linux}) do
     for file <- File.ls!(@dev),
         Regex.match?(@linuxre, file) do
-      file
+      Path.join(@dev, file)
     end
   end
 

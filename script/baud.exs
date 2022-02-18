@@ -1,7 +1,7 @@
 tty =
   case :os.type() do
-    {:unix, :darwin} -> "cu.usbserial-FTYHQD9MA"
-    {:unix, :linux} -> "ttyUSB0"
+    {:unix, :darwin} -> "/dev/tty.usbserial-FTYHQD9MA"
+    {:unix, :linux} -> "/dev/ttyUSB0"
     {:win32, :nt} -> "COM5"
   end
 

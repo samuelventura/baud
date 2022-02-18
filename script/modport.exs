@@ -2,8 +2,8 @@ alias Modbus.Rtu.Master
 
 tty =
   case :os.type() do
-    {:unix, :darwin} -> "cu.usbserial-FTVFV143"
-    {:unix, :linux} -> "ttyUSB0"
+    {:unix, :darwin} -> "/dev/tty.usbserial-FTVFV143"
+    {:unix, :linux} -> "/dev/ttyUSB0"
     {:win32, :nt} -> "COM5"
   end
 
