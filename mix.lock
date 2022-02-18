@@ -7,5 +7,5 @@
   "makeup_erlang": {:hex, :makeup_erlang, "0.1.1", "3fcb7f09eb9d98dc4d208f49cc955a34218fc41ff6b84df7c75b3e6e533cc65f", [:mix], [{:makeup, "~> 1.0", [hex: :makeup, repo: "hexpm", optional: false]}], "hexpm", "174d0809e98a4ef0b3309256cbf97101c6ec01c4ab0b23e926a9e17df2077cbb"},
   "modbus": {:hex, :modbus, "0.3.8", "131d7348bc1d5d22656c423b706bbc5e8f1f854018be2ef90d4ee570e72a0998", [:mix], [], "hexpm", "271ae0674e371f71e68bb31dba07e56a4bff0f95a5ec27b56e6bfd1c9c33de0e"},
   "nimble_parsec": {:hex, :nimble_parsec, "1.2.2", "b99ca56bbce410e9d5ee4f9155a212e942e224e259c7ebbf8f2c86ac21d4fa3c", [:mix], [], "hexpm", "98d51bd64d5f6a2a9c6bb7586ee8129e27dfaab1140b5a4753f24dac0ba27d2f"},
-  "sniff": {:hex, :sniff, "0.1.5", "879eb5f33165a1fe53092b41cbb4ae4be13eeda6b8f53650d5bcf4e0f7add609", [:mix], [], "hexpm", "83094a72c92b4b72e7f57adccae7c51474c92e2a266326058d7ac91eab286cd9"},
+  "sniff": {:hex, :sniff, "0.1.6", "7ce3b6b85f542d563ed2637c58062141138e6037f6c6ecbdeac72427d5753b25", [:mix], [], "hexpm", "d334d67eafbcda42c18f63be295f14eedd66a38995826bd1829bbc2bd5afffe9"},
 }

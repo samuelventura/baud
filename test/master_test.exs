@@ -286,13 +286,17 @@ defmodule Modbus.Rtu.MasterTest do
       Baud.write(pid1, rtu_res)
     end)
 
-    {:ok, ^val} = Modbus.Rtu.Master.exec(pid0, cmd)
+    case val do
+      nil -> :ok = Modbus.Rtu.Master.exec(pid0, cmd)
+      _ -> {:ok, ^val} = Modbus.Rtu.Master.exec(pid0, cmd)
+    end
   end
 
   defp pp2(pid0, pid1, cmd, req, res, state, state2) do
     spawn(fn ->
       length = Rtu.req_len(cmd)
-      {:ok, rtu_req} = Baud.readn(pid1, length)
+      result = Baud.readn(pid1, length, 800)
+      {:ok, rtu_req} = result
       ^req = Rtu.unwrap(rtu_req)
       ^rtu_req = Rtu.wrap(req)
       ^cmd = Rtu.parse_req(rtu_req)

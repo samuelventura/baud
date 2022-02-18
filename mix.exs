@@ -22,7 +22,7 @@ defmodule Baud.Mixfile do
 
   defp deps do
     [
-      {:sniff, "~> 0.1.5"},
+      {:sniff, "~> 0.1.6"},
       {:modbus, "~> 0.3.8"},
       {:ex_doc, "~> 0.28", only: :dev}
     ]

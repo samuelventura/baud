@@ -6,9 +6,10 @@ defmodule Baud.KillTest do
     Process.flag(:trap_exit, true)
     tty0 = TTY.tty0()
     {:ok, pid0} = Baud.start_link(device: tty0)
-    Baud.write(pid0, "hello")
-    Process.exit(pid0, :kill)
+    :ok = Baud.write(pid0, "hello")
+    true = Process.exit(pid0, :kill)
     :timer.sleep(100)
+    false = Process.alive?(pid0)
     {:ok, pid0} = Baud.start_link(device: tty0)
     :ok = Baud.stop(pid0)
   end
