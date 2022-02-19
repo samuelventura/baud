@@ -5,6 +5,11 @@ defmodule Modbus.Rtu.Master do
     ```elixir
 
     ```
+
+    Uses:
+
+    - https://github.com/samuelventura/sniff
+    - https://github.com/samuelventura/modbus
   """
   alias Modbus.Rtu
 
@@ -14,18 +19,17 @@ defmodule Modbus.Rtu.Master do
   `params` *must* contain a keyword list to be merged with the following defaults:
   ```elixir
   [
-    device: nil,         #serial port name: "COM1", "/dev/ttyUSB0", "/dev/tty.usbserial-FTYHQD9MA"
-    speed: 9600,       #either 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200
-                         #win32 adds 14400, 128000, 256000
-    config: "8N1",       #either "8N1", "7E1", "7O1"
+    device: nil,        #serial port name: "COM1", "/dev/ttyUSB0", "/dev/tty.usbserial-FTYHQD9MA"
+    speed: 9600,        #either 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200
+                        #win32 adds 14400, 128000, 256000
+    config: "8N1",      #either "8N1", "7E1", "7O1"
   ]
   ```
-  `opts` is optional and is passed verbatim to GenServer.
 
-  Returns `{:ok, pid}`.
+  Returns `{:ok, pid}` | `{:error, reason}`.
   ## Example
     ```
-    Master.start_link(device: "COM8")
+    Rtu.start_link(device: "/dev/ttyUSB0")
     ```
   """
   def start_link(params) do
@@ -50,13 +54,20 @@ defmodule Modbus.Rtu.Master do
   def stop(pid) do
     Agent.get(
       pid,
-      fn nid -> :ok = Sniff.close(nid) end,
+      fn nid ->
+        :ok = Sniff.close(nid)
+      end,
       @to
     )
 
     Agent.stop(pid)
   end
 
+  @doc """
+    Sends commands through the RTU server.
+
+    Returns `:ok` | `{:error, reason}`.
+  """
   def exec(pid, cmd, timeout \\ @to) do
     Agent.get(
       pid,

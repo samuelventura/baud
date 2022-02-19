@@ -21,13 +21,13 @@ Elixir Serial Port with Modbus RTU.
   3. Interact with your serial port.
 
   ```elixir
+  #this echo sample requires a loopback plug
   tty = case :os.type() do
     {:unix, :darwin} -> "/dev/tty.usbserial-FTYHQD9MA"
     {:unix, :linux} -> "/dev/ttyUSB0"
     {:win32, :nt} -> "COM5"
   end
 
-  # try this with a loopback
   {:ok, pid} = Baud.start_link(device: tty)
 
   Baud.write pid, "01234\n56789\n98765\n43210"
@@ -37,16 +37,17 @@ Elixir Serial Port with Modbus RTU.
   {:to, "43210"} = Baud.readln pid
 
   Baud.write pid, "01234\r56789\r98765\r43210"
-  {:ok, "01234\r"} = Baud.readch pid, 0x0d
-  {:ok, "56789\r"} = Baud.readch pid, 0x0d
-  {:ok, "98765\r"} = Baud.readch pid, 0x0d
-  {:to, "43210"} = Baud.readch pid, 0x0d
+  {:ok, "01234\r"} = Baud.readcr pid
+  {:ok, "56789\r"} = Baud.readcr pid
+  {:ok, "98765\r"} = Baud.readcr pid
+  {:to, "43210"} = Baud.readcr pid
 
   Baud.write pid, "01234\n56789\n98765\n43210"
   {:ok, "01234\n"} = Baud.readn pid, 6
   {:ok, "56789\n"} = Baud.readn pid, 6
   {:ok, "98765\n"} = Baud.readn pid, 6
   {:to, "43210"} = Baud.readn pid, 6
+  {:ok, ""} = Baud.readn pid, 0
 
   Baud.write pid, "01234\n"
   Baud.write pid, "56789\n"
@@ -82,13 +83,6 @@ Elixir Serial Port with Modbus RTU.
   # read 55AA from holding register at slave 1 address 3300 to 3301
   {:ok, [0x55AA]} = Master.exec pid, {:rhr, 1, 3300, 1}
   ```
-
-## Test
-
-```bash
-# script to setup socat ttys
-./test.sh
-```
 
 ## Windows
 

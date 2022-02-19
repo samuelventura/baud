@@ -1,42 +1,49 @@
 defmodule Baud do
+  @sleep 10
+  @to 400
+
   @moduledoc """
-    Serial port module.
+  Serial port module.
 
-    ```elixir
-    tty = case :os.type() do
-      {:unix, :darwin} -> "/dev/tty.usbserial-FTYHQD9MA"
-      {:unix, :linux} -> "/dev/ttyUSB0"
-      {:win32, :nt} -> "COM5"
-    end
+  ```elixir
+  #this echo sample requires a loopback plug
+  tty = case :os.type() do
+    {:unix, :darwin} -> "/dev/tty.usbserial-FTYHQD9MA"
+    {:unix, :linux} -> "/dev/ttyUSB0"
+    {:win32, :nt} -> "COM5"
+  end
 
-    #Try this with a loopback
-    {:ok, pid} = Baud.start_link(device: tty)
+  {:ok, pid} = Baud.start_link(device: tty)
 
-    Baud.write pid, "01234\\n56789\\n98765\\n43210"
-    {:ok, "01234\\n"} = Baud.readln pid
-    {:ok, "56789\\n"} = Baud.readln pid
-    {:ok, "98765\\n"} = Baud.readln pid
-    {:to, "43210"} = Baud.readln pid
+  Baud.write pid, "01234\\n56789\\n98765\\n43210"
+  {:ok, "01234\\n"} = Baud.readln pid
+  {:ok, "56789\\n"} = Baud.readln pid
+  {:ok, "98765\\n"} = Baud.readln pid
+  {:to, "43210"} = Baud.readln pid
 
-    Baud.write pid, "01234\\r56789\\r98765\\r43210"
-    {:ok, "01234\\r"} = Baud.readch pid, 0x0d
-    {:ok, "56789\\r"} = Baud.readch pid, 0x0d
-    {:ok, "98765\\r"} = Baud.readch pid, 0x0d
-    {:to, "43210"} = Baud.readch pid, 0x0d
+  Baud.write pid, "01234\r56789\r98765\r43210"
+  {:ok, "01234\r"} = Baud.readcr pid
+  {:ok, "56789\r"} = Baud.readcr pid
+  {:ok, "98765\r"} = Baud.readcr pid
+  {:to, "43210"} = Baud.readcr pid
 
-    Baud.write pid, "01234\\n56789\\n98765\\n43210"
-    {:ok, "01234\\n"} = Baud.readn pid, 6
-    {:ok, "56789\\n"} = Baud.readn pid, 6
-    {:ok, "98765\\n"} = Baud.readn pid, 6
-    {:to, "43210"} = Baud.readn pid, 6
+  Baud.write pid, "01234\\n56789\\n98765\\n43210"
+  {:ok, "01234\\n"} = Baud.readn pid, 6
+  {:ok, "56789\\n"} = Baud.readn pid, 6
+  {:ok, "98765\\n"} = Baud.readn pid, 6
+  {:to, "43210"} = Baud.readn pid, 6
 
-    Baud.write pid, "01234\\n"
-    Baud.write pid, "56789\\n"
-    Baud.write pid, "98765\\n"
-    Baud.write pid, "43210"
-    :timer.sleep 100
-    {:ok, "01234\\n56789\\n98765\\n43210"} = Baud.readall pid
-    ```
+  Baud.write pid, "01234\\n"
+  Baud.write pid, "56789\\n"
+  Baud.write pid, "98765\\n"
+  Baud.write pid, "43210"
+  :timer.sleep 100
+  {:ok, "01234\\n56789\\n98765\\n43210"} = Baud.readall pid
+  ```
+
+  Uses:
+
+  - https://github.com/samuelventura/sniff
   """
 
   @doc """
@@ -45,33 +52,28 @@ defmodule Baud do
   `params` *must* contain a keyword list to be merged with the following defaults:
   ```elixir
   [
-    device: nil,         #serial port name: "COM1", "/dev/ttyUSB0", "/dev/tty.usbserial-FTYHQD9MA"
-    speed: 9600,       #either 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200
-                         #win32 adds 14400, 128000, 256000
-    config: "8N1",       #either "8N1", "7E1", "7O1"
+    device: nil,        #serial port name: "COM1", "/dev/ttyUSB0", "/dev/tty.usbserial-FTYHQD9MA"
+    speed: 9600,        #either 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200
+                        #win32 adds 14400, 128000, 256000
+    config: "8N1",      #either "8N1", "7E1", "7O1"
   ]
   ```
-  `opts` is optional and is passed verbatim to GenServer.
 
-  Returns `{:ok, pid}`.
+  Returns `{:ok, pid}` | `{:error, reason}`.
+
   ## Example
     ```
-    Baud.start_link(device: "COM8")
+    Baud.start_link(device: "/dev/ttyUSB0")
     ```
   """
   def start_link(opts) do
     device = Keyword.fetch!(opts, :device)
     speed = Keyword.get(opts, :speed, 9600)
     config = Keyword.get(opts, :config, "8N1")
-
-    case Sniff.open(device, speed, config) do
-      {:ok, nid} -> Agent.start_link(fn -> {nid, <<>>} end)
-      other -> other
-    end
+    sleep = Keyword.get(opts, :sleep, @sleep)
+    init = %{device: device, speed: speed, config: config, sleep: sleep}
+    GenServer.start_link(__MODULE__.Server, init)
   end
-
-  @sleep 10
-  @to 400
 
   @doc """
     Stops the serial server.
@@ -79,194 +81,191 @@ defmodule Baud do
     Returns `:ok`.
   """
   def stop(pid) do
-    Agent.get(
-      pid,
-      fn {nid, _} ->
-        :ok = Sniff.close(nid)
-      end,
-      @to
-    )
-
-    Agent.stop(pid)
+    GenServer.stop(pid)
   end
 
   @doc """
   Writes `data` to the serial port.
 
-  Returns `:ok`.
+  Returns `:ok` | `{:error, reason}`.
   """
-  def write(pid, data, timeout \\ @to) do
-    Agent.get(
-      pid,
-      fn {nid, _} ->
-        :ok = Sniff.write(nid, data)
-      end,
-      timeout
-    )
+  def write(pid, data) do
+    GenServer.call(pid, {:write, data})
   end
 
   @doc """
   Reads all available data.
 
-  Returns `{:ok, data}`.
+  Returns `{:ok, data}` | `{:error, reason}`.
   """
-  def readall(pid, timeout \\ @to) do
-    Agent.get_and_update(
-      pid,
-      fn {nid, buf} ->
-        {:ok, data} = Sniff.read(nid)
-        all = buf <> data
-        {{:ok, all}, {nid, <<>>}}
-      end,
-      timeout
-    )
+  def readall(pid) do
+    GenServer.call(pid, {:readall})
   end
 
   @doc """
   Reads `count` bytes.
 
-  Returns `{:ok, data} | {:to, partial}`.
+  Returns `{:ok, data} | {:to, partial}` | `{:error, reason}`.
   """
-  def readn(pid, count, timeout \\ @to) do
-    Agent.get_and_update(
-      pid,
-      fn {nid, buf} ->
-        now = now()
-        size = byte_size(buf)
-        dl = now + timeout
-        {res, head, tail} = read_n(nid, [buf], size, count, dl)
-        {{res, head}, {nid, tail}}
-      end,
-      2 * timeout
-    )
+  def readn(pid, count, timeout \\ @to) when count >= 0 do
+    GenServer.call(pid, {:readn, count, timeout})
   end
 
   @doc """
-  Reads until 'nl' is received.
+  Reads until 'nl' (0x0A) is received.
 
-  Returns `{:ok, line} | {:to, partial}`.
+  Returns `{:ok, line} | {:to, partial}` | `{:error, reason}`.
   """
   def readln(pid, timeout \\ @to) do
-    Agent.get_and_update(
-      pid,
-      fn {nid, buf} ->
-        now = now()
-        ch = 10
-        index = index(buf, ch)
-        size = byte_size(buf)
-        dl = now + timeout
-        {res, head, tail} = read_ch(nid, [buf], index, size, ch, dl)
-        {{res, head}, {nid, tail}}
-      end,
-      2 * timeout
-    )
+    GenServer.call(pid, {:readch, 0x0A, timeout})
+  end
+
+  @doc """
+  Reads until 'cr' (0x0D) is received.
+
+  Returns `{:ok, line} | {:to, partial}` | `{:error, reason}`.
+  """
+  def readcr(pid, timeout \\ @to) do
+    GenServer.call(pid, {:readch, 0x0D, timeout})
   end
 
   @doc """
   Reads until 'ch' is received.
 
-  Returns `{:ok, data} | {:to, partial}`.
+  Returns `{:ok, data} | {:to, partial}` | `{:error, reason}`.
   """
-  def readch(pid, ch, timeout \\ @to) do
-    Agent.get_and_update(
-      pid,
-      fn {nid, buf} ->
-        now = now()
-        index = index(buf, ch)
-        size = byte_size(buf)
-        dl = now + timeout
-        {res, head, tail} = read_ch(nid, [buf], index, size, ch, dl)
-        {{res, head}, {nid, tail}}
-      end,
-      2 * timeout
-    )
+  def readch(pid, ch, timeout \\ @to) when ch >= 0 and ch <= 256 do
+    GenServer.call(pid, {:readch, ch, timeout})
   end
 
-  defp read_ch(nid, iol, index, size, ch, dl) do
-    case index >= 0 do
-      true ->
-        split_i(iol, index)
+  defmodule Server do
+    use GenServer
 
-      false ->
-        {:ok, data} = Sniff.read(nid)
+    def init(init) do
+      %{device: device, speed: speed, config: config, sleep: sleep} = init
 
-        case data do
-          <<>> ->
-            :timer.sleep(@sleep)
-            now = now()
+      case Sniff.open(device, speed, config) do
+        {:ok, nid} -> {:ok, {nid, <<>>, sleep}}
+        {:er, reason} -> {:stop, reason}
+      end
+    end
 
-            case now > dl do
-              true -> {:to, all(iol), <<>>}
-              false -> read_ch(nid, iol, -1, size, ch, dl)
+    def handle_call({:write, data}, _from, {nid, _, _} = state) do
+      case Sniff.write(nid, data) do
+        :ok -> {:reply, :ok, state}
+        {:er, reason} -> {:reply, {:error, reason}, state}
+      end
+    end
+
+    def handle_call({:readall}, _from, {nid, buf, sleep}) do
+      case Sniff.read(nid) do
+        {:ok, data} ->
+          {:reply, {:ok, buf <> data}, {nid, <<>>, sleep}}
+
+        {:er, reason} ->
+          {:reply, {:error, {reason, buf}}, {nid, <<>>, sleep}}
+      end
+    end
+
+    def handle_call({:readch, ch, timeout}, _from, {nid, buf, sleep}) do
+      result = readch(nid, ch, buf, timeout, sleep)
+
+      case result do
+        {:ok, head, tail} -> {:reply, {:ok, head}, {nid, tail, sleep}}
+        {:to, buf} -> {:reply, {:to, buf}, {nid, <<>>, sleep}}
+        {:er, reason} -> {:reply, {:error, reason}, {nid, <<>>, sleep}}
+      end
+    end
+
+    def handle_call({:readn, count, timeout}, _from, {nid, buf, sleep}) do
+      result = readn(nid, count, buf, timeout, sleep)
+
+      case result do
+        {:ok, head, tail} -> {:reply, {:ok, head}, {nid, tail, sleep}}
+        {:to, buf} -> {:reply, {:to, buf}, {nid, <<>>, sleep}}
+        {:er, reason} -> {:reply, {:error, reason}, {nid, <<>>, sleep}}
+      end
+    end
+
+    defp readch(nid, ch, buf, timeout, sleep) do
+      dl = millis() + timeout
+
+      Stream.iterate(0, &(&1 + 1))
+      |> Enum.reduce_while({<<>>, buf}, fn i, {buf1, buf2} ->
+        case index(buf2, ch) do
+          -1 ->
+            # i > 0  for one undelayed read at least
+            if i > 0, do: :timer.sleep(sleep)
+
+            case i > 0 && millis() >= dl do
+              true ->
+                {:halt, {:to, buf1 <> buf2}}
+
+              false ->
+                case Sniff.read(nid) do
+                  {:ok, data} ->
+                    {:cont, {buf1 <> buf2, data}}
+
+                  {:er, reason} ->
+                    {:halt, {:er, {reason, buf1 <> buf2}}}
+                end
             end
 
-          _ ->
-            case index(data, ch) do
-              -1 -> read_ch(nid, [data | iol], -1, size + byte_size(data), ch, dl)
-              index -> read_ch(nid, [data | iol], size + index, size + byte_size(data), ch, dl)
-            end
+          i ->
+            {head, tail} = split(buf2, i + 1)
+            {:halt, {:ok, buf1 <> head, tail}}
         end
+      end)
     end
-  end
 
-  defp read_n(nid, iol, size, count, dl) do
-    case size >= count do
-      true ->
-        split_c(iol, count)
+    defp readn(nid, count, buf, timeout, sleep) do
+      dl = millis() + timeout
 
-      false ->
-        {:ok, data} = Sniff.read(nid)
+      Stream.iterate(0, &(&1 + 1))
+      |> Enum.reduce_while({<<>>, buf}, fn i, {buf1, buf2} ->
+        case byte_size(buf1) + byte_size(buf2) >= count do
+          false ->
+            # i > 0  for one undelayed read at least
+            if i > 0, do: :timer.sleep(sleep)
 
-        case data do
-          <<>> ->
-            :timer.sleep(@sleep)
-            now = now()
+            case i > 0 && millis() >= dl do
+              true ->
+                {:halt, {:to, buf1 <> buf2}}
 
-            case now > dl do
-              true -> {:to, all(iol), <<>>}
-              false -> read_n(nid, iol, size, count, dl)
+              false ->
+                case Sniff.read(nid) do
+                  {:ok, data} ->
+                    {:cont, {buf1 <> buf2, data}}
+
+                  {:er, reason} ->
+                    {:halt, {:er, {reason, buf1 <> buf2}}}
+                end
             end
 
-          _ ->
-            read_n(nid, [data | iol], size + byte_size(data), count, dl)
+          true ->
+            {head, tail} = split(buf2, count - byte_size(buf1))
+            {:halt, {:ok, buf1 <> head, tail}}
         end
+      end)
     end
-  end
 
-  defp now(), do: :erlang.monotonic_time(:milli_seconds)
+    defp index(<<>>, _), do: -1
 
-  defp index(bin, ch) do
-    case :binary.match(bin, <<ch>>) do
-      :nomatch -> -1
-      {index, _} -> index
+    defp index(bin, ch) do
+      case :binary.match(bin, <<ch>>) do
+        :nomatch -> -1
+        {index, _} -> index
+      end
     end
-  end
 
-  defp all(list) when is_list(list) do
-    reversed = Enum.reverse(list)
-    :erlang.iolist_to_binary(reversed)
-  end
+    defp split(bin, index) do
+      head = :binary.part(bin, {0, index})
+      tail = :binary.part(bin, {index, byte_size(bin) - index})
+      {head, tail}
+    end
 
-  defp split_i(bin, index) when is_binary(bin) do
-    head = :binary.part(bin, {0, index + 1})
-    tail = :binary.part(bin, {index + 1, byte_size(bin) - index - 1})
-    {:ok, head, tail}
-  end
-
-  defp split_i(list, index) when is_list(list) do
-    reversed = Enum.reverse(list)
-    bin = :erlang.iolist_to_binary(reversed)
-    split_i(bin, index)
-  end
-
-  defp split_c(bin, count) when is_binary(bin) do
-    <<head::bytes-size(count), tail::binary>> = bin
-    {:ok, head, tail}
-  end
-
-  defp split_c(list, count) when is_list(list) do
-    reversed = Enum.reverse(list)
-    bin = :erlang.iolist_to_binary(reversed)
-    split_c(bin, count)
+    defp millis() do
+      System.monotonic_time(:millisecond)
+    end
   end
 end

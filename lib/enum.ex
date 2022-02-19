@@ -6,18 +6,18 @@ defmodule Baud.Enum do
   @dev "/dev"
 
   # https://regex101.com/
-  # FTDI /dev/baud.usbserial-FTYHQD9MA | /dev/baud.usbserial-FTYHQD9MB | ...
-  # Prolific /dev/baud.usbserial | /dev/baud.usbserial2 | ...
+  # FTDI /dev/tty.usbserial-FTYHQD9MA | /dev/tty.usbserial-FTYHQD9MB | ...
+  # Prolific /dev/tty.usbserial | /dev/tty.usbserial2 | ...
   # http://stackoverflow.com/questions/8632586/macos-whats-the-difference-between-dev-baud-and-dev-cu
   @darwinre ~r/(cu|tty)\.usbserial.*/
   @linuxre ~r/ttyS[0-9]*|ttyUSB[0-9]*/
 
   @doc """
   Lists the names of the available serial ports.
+
   Returns: `["COM1", "/dev/ttyUSB0", "/dev/tty.usbserial-FTYHQD9MA"]`
   """
   def list() do
-    # http://stackoverflow.com/questions/33461345/how-can-i-get-the-current-operating-system-name-in-elixir
     # uname -s
     # {:unix, :darwin} MacPro OS X El Capitan
     # {:unix, :linux} Ubuntu 16.04 64x
@@ -41,7 +41,6 @@ defmodule Baud.Enum do
     end
   end
 
-  # https://github.com/nerves-project/nerves_baud
   # http://stackoverflow.com/questions/1388871/how-do-i-get-a-list-of-available-serial-ports-in-win32
   # UNC Paths \\\\.\\COM11
   defp list({:win32, :nt}) do

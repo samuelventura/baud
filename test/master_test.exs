@@ -1,4 +1,4 @@
-defmodule Modbus.Rtu.MasterTest do
+defmodule Baud.MasterTest do
   use ExUnit.Case
   alias Baud.TTY
   alias Modbus.Model

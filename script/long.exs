@@ -16,14 +16,21 @@ tty1 =
 {:ok, pid1} = Baud.start_link(device: tty1, speed: 115_200)
 
 to = 100
-long = String.duplicate("0123456789", 20)
 
-for i <- 1..100_000 do
-  :ok = Baud.write(pid0, long, to)
+pk =
+  Enum.reduce(0..255, [], fn i, list ->
+    [<<i>> | list]
+  end)
+  |> Enum.reverse()
+  |> :erlang.iolist_to_binary()
 
-  case Baud.readn(pid1, byte_size(long), to) do
-    {:ok, ^long} ->
-      IO.inspect({i, "Packet complete"})
+Stream.iterate(0, &(&1 + 1))
+|> Enum.each(fn i ->
+  :ok = Baud.write(pid0, pk)
+
+  case Baud.readn(pid1, byte_size(pk), to) do
+    {:ok, ^pk} ->
+      IO.inspect({i, "Packet ok"})
       :ok
 
     {:ok, other} ->
@@ -35,4 +42,4 @@ for i <- 1..100_000 do
       :timer.sleep(to)
       Baud.readall(pid1)
   end
-end
+end)
