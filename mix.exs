@@ -45,7 +45,8 @@ defmodule Baud.Mixfile do
   defp aliases do
     [
       baud: ["run script/baud.exs"],
-      long: ["run script/long.exs"]
+      long: ["run script/long.exs"],
+      slave: ["run script/slave.exs"]
     ]
   end
 end

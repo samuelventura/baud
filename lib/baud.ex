@@ -21,10 +21,10 @@ defmodule Baud do
   {:ok, "98765\\n"} = Baud.readln pid
   {:to, "43210"} = Baud.readln pid
 
-  Baud.write pid, "01234\r56789\r98765\r43210"
-  {:ok, "01234\r"} = Baud.readcr pid
-  {:ok, "56789\r"} = Baud.readcr pid
-  {:ok, "98765\r"} = Baud.readcr pid
+  Baud.write pid, "01234\\r56789\\r98765\\r43210"
+  {:ok, "01234\\r"} = Baud.readcr pid
+  {:ok, "56789\\r"} = Baud.readcr pid
+  {:ok, "98765\\r"} = Baud.readcr pid
   {:to, "43210"} = Baud.readcr pid
 
   Baud.write pid, "01234\\n56789\\n98765\\n43210"
@@ -140,6 +140,7 @@ defmodule Baud do
 
   defmodule Server do
     use GenServer
+    @moduledoc false
 
     def init(init) do
       %{device: device, speed: speed, config: config, sleep: sleep} = init

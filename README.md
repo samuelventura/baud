@@ -57,31 +57,57 @@ Elixir Serial Port with Modbus RTU.
   {:ok, "01234\n56789\n98765\n43210"} = Baud.readall pid
   ```
 
-  4. Interact with your **RTU** devices.
+  4. Connect the RTU master to the testing RTU slave:
 
   ```elixir    
+  # run with: mix slave
+  alias Modbus.Rtu.Slave
   alias Modbus.Rtu.Master
 
-  tty = case :os.type() do
-    {:unix, :darwin} -> "/dev/tty.usbserial-FTVFV143"
-    {:unix, :linux} -> "/dev/ttyUSB0"
-    {:win32, :nt} -> "COM5"
-  end
+  tty0 =
+    case :os.type() do
+      {:unix, :darwin} -> "/dev/tty.usbserial-FTYHQD9MA"
+      {:unix, :linux} -> "/dev/ttyUSB0"
+      {:win32, :nt} -> "COM5"
+    end
 
-  # rs485 usb adapter to modport
-  {:ok, pid} = Master.start_link(device: tty, speed: 57600)
-  # force 0 to coil at slave 1 address 3000
-  :ok = Master.exec pid, {:fc, 1, 3000, 0}
-  # read 0 from coil at slave 1 address 3000
-  {:ok, [0]} = Master.exec pid, {:rc, 1, 3000, 1}
-  # force 10 to coils at slave 1 address 3000 to 3001
-  :ok = Master.exec pid, {:fc, 1, 3000, [1, 0]}
-  # read 10 from coils at slave 1 address 3000 to 3001
-  {:ok, [1, 0]} = Master.exec pid, {:rc, 1, 3000, 2}
-  # preset 55AA to holding register at slave 1 address 3300
-  :ok = Master.exec pid, {:phr, 1, 3300, 0x55AA}
-  # read 55AA from holding register at slave 1 address 3300 to 3301
-  {:ok, [0x55AA]} = Master.exec pid, {:rhr, 1, 3300, 1}
+  tty1 =
+    case :os.type() do
+      {:unix, :darwin} -> "/dev/tty.usbserial-FTYHQD9MB"
+      {:unix, :linux} -> "/dev/ttyUSB1"
+      {:win32, :nt} -> "COM6"
+    end
+
+  # start your slave with a shared model
+  model = %{
+    0x50 => %{
+      {:c, 0x5152} => 0,
+      {:i, 0x5354} => 0,
+      {:i, 0x5355} => 1,
+      {:hr, 0x5657} => 0x6162,
+      {:ir, 0x5859} => 0x6364,
+      {:ir, 0x585A} => 0x6566
+    }
+  }
+
+  {:ok, _} = Slave.start_link(model: model, device: tty0)
+  {:ok, mpid} = Master.start_link(device: tty1)
+
+  # read input
+  {:ok, [0, 1]} = Master.exec(mpid, {:ri, 0x50, 0x5354, 2})
+  # read input registers
+  {:ok, [0x6364, 0x6566]} = Master.exec(mpid, {:rir, 0x50, 0x5859, 2})
+
+  # toggle coil and read it back
+  :ok = Master.exec(mpid, {:fc, 0x50, 0x5152, 0})
+  {:ok, [0]} = Master.exec(mpid, {:rc, 0x50, 0x5152, 1})
+  :ok = Master.exec(mpid, {:fc, 0x50, 0x5152, 1})
+  {:ok, [1]} = Master.exec(mpid, {:rc, 0x50, 0x5152, 1})
+
+  # increment holding register and read it back
+  {:ok, [0x6162]} = Master.exec(mpid, {:rhr, 0x50, 0x5657, 1})
+  :ok = Master.exec(mpid, {:phr, 0x50, 0x5657, 0x6163})
+  {:ok, [0x6163]} = Master.exec(mpid, {:rhr, 0x50, 0x5657, 1})
   ```
 
 ## Windows
@@ -105,6 +131,14 @@ Give yourself access to serial ports with `sudo dseditgroup -o edit -a samuel -t
 Future
 
 - [ ] Remote compile mix task to Linux & Windows
+
+0.5.7
+
+- [x] Updated to sniff 0.1.7
+- [x] Updated to modbus 0.3.9
+- [x] Added RTU slave for testability
+- [x] Master module rewrite for readability
+- [x] Baud module rewrite for readability
 
 0.5.6
 
