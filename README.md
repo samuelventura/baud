@@ -8,7 +8,7 @@ Elixir Serial Port with Modbus RTU.
 
   ```elixir
   def deps do
-    [{:baud, "~> 0.5.6"}]
+    [{:baud, "~> 0.5.7"}]
   end
   ```
 
