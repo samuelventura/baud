@@ -65,7 +65,7 @@ defmodule Baud do
     config = Keyword.get(opts, :config, "8N1")
 
     case Sniff.open(device, speed, config) do
-      {:ok, nid} -> Agent.start_link(fn -> {nid, <<>>} end, opts)
+      {:ok, nid} -> Agent.start_link(fn -> {nid, <<>>} end)
       other -> other
     end
   end
@@ -240,10 +240,6 @@ defmodule Baud do
       :nomatch -> -1
       {index, _} -> index
     end
-  end
-
-  defp all(bin) when is_binary(bin) do
-    bin
   end
 
   defp all(list) when is_list(list) do
