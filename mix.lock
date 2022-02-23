@@ -4,7 +4,7 @@
   "makeup": {:hex, :makeup, "1.1.0", "6b67c8bc2882a6b6a445859952a602afc1a41c2e08379ca057c0f525366fc3ca", [:mix], [{:nimble_parsec, "~> 1.2.2 or ~> 1.3", [hex: :nimble_parsec, repo: "hexpm", optional: false]}], "hexpm", "0a45ed501f4a8897f580eabf99a2e5234ea3e75a4373c8a52824f6e873be57a6"},
   "makeup_elixir": {:hex, :makeup_elixir, "0.15.2", "dc72dfe17eb240552857465cc00cce390960d9a0c055c4ccd38b70629227e97c", [:mix], [{:makeup, "~> 1.0", [hex: :makeup, repo: "hexpm", optional: false]}, {:nimble_parsec, "~> 1.1", [hex: :nimble_parsec, repo: "hexpm", optional: false]}], "hexpm", "fd23ae48d09b32eff49d4ced2b43c9f086d402ee4fd4fcb2d7fad97fa8823e75"},
   "makeup_erlang": {:hex, :makeup_erlang, "0.1.1", "3fcb7f09eb9d98dc4d208f49cc955a34218fc41ff6b84df7c75b3e6e533cc65f", [:mix], [{:makeup, "~> 1.0", [hex: :makeup, repo: "hexpm", optional: false]}], "hexpm", "174d0809e98a4ef0b3309256cbf97101c6ec01c4ab0b23e926a9e17df2077cbb"},
-  "modbus": {:git, "https://github.com/samuelventura/modbus.git", "259c8fb5bcc7749f32f53a9d645431318cb19d52", [tag: "0.4.0"]},
+  "modbus": {:hex, :modbus, "0.4.0", "fe3db894e63b4e43f7e6bcfbe34f7e62bc47ec02135d135197edad5fbc2fbacf", [:mix], [], "hexpm", "7bef756ce32c2577bf458fb7b82850b1a9026e396a52c88960cd1b0e621c641e"},
   "nimble_parsec": {:hex, :nimble_parsec, "1.2.2", "b99ca56bbce410e9d5ee4f9155a212e942e224e259c7ebbf8f2c86ac21d4fa3c", [:mix], [], "hexpm", "98d51bd64d5f6a2a9c6bb7586ee8129e27dfaab1140b5a4753f24dac0ba27d2f"},
   "sniff": {:hex, :sniff, "0.1.7", "3a27a912e1a1431c879ab32bf50b6c1371e1cf907ef7ed51b71482ed7fd78431", [:mix], [], "hexpm", "d58d68907623c6a57928d74169de00cd48e08887f0a17b0ddf7d9cc2a76bc0f7"},
 }

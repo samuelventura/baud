@@ -84,7 +84,7 @@ defmodule Baud.Master do
   """
   def start_link(opts) do
     trans = Keyword.get(opts, :trans, Baud.Transport)
-    proto = Keyword.get(opts, :proto, :rtu)
+    proto = Keyword.get(opts, :proto, Modbus.Rtu.Protocol)
     opts = Keyword.put(opts, :trans, trans)
     opts = Keyword.put(opts, :proto, proto)
     Modbus.Master.start_link(opts)

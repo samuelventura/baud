@@ -2,13 +2,11 @@ defmodule Baud.Slave do
   @moduledoc false
   alias Modbus.Shared
   alias Modbus.Transport
-  alias Modbus.Protocol
 
   def start_link(opts) do
     model = Keyword.fetch!(opts, :model)
-    proto = Keyword.get(opts, :proto, :rtu)
+    protom = Keyword.get(opts, :proto, Modbus.Rtu.Protocol)
     transm = Baud.Transport
-    protom = Protocol.module(proto)
     init = %{trans: transm, proto: protom, model: model, opts: opts}
     GenServer.start_link(__MODULE__.Server, init)
   end

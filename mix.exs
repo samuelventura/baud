@@ -25,7 +25,9 @@ defmodule Baud.Mixfile do
   defp deps do
     [
       {:sniff, "~> 0.1.7"},
-      {:modbus, path: "../modbus"},
+      {:modbus, "~> 0.4.0"},
+      # {:modbus, git: "https://github.com/samuelventura/modbus.git", tag: "0.4.0"},
+      # {:modbus, path: "../modbus"},
       {:ex_doc, "~> 0.28", only: :dev}
     ]
   end

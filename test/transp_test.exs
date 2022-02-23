@@ -3,7 +3,7 @@ defmodule Baud.TransTest do
   alias Baud.TTY
   alias Baud.Transport
 
-  test "serial transport close readn test" do
+  test "serial transport readn test" do
     tty0 = TTY.tty0()
     tty1 = TTY.tty1()
     {:ok, trans} = Transport.open(device: tty0)
@@ -16,7 +16,7 @@ defmodule Baud.TransTest do
     {:error, {_, _}} = Transport.readn(trans, 1, 10)
   end
 
-  test "serial transport close readp test" do
+  test "serial transport readp test" do
     tty0 = TTY.tty0()
     tty1 = TTY.tty1()
     {:ok, trans} = Transport.open(device: tty0)
