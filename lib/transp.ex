@@ -16,15 +16,13 @@ defmodule Baud.Transport do
     Sniff.open(device, speed, config) |> trans()
   end
 
-  def read(nid, count, timeout) do
-    case {count, timeout} do
-      {0, -1} ->
-        scan_s(nid) |> trans()
+  def readp(nid) do
+    scanp(nid) |> trans()
+  end
 
-      _ ->
-        dl = millis() + timeout
-        scan_m(nid, count, dl) |> trans()
-    end
+  def readn(nid, count, timeout) do
+    dl = millis() + timeout
+    scann(nid, count, dl) |> trans()
   end
 
   def write(nid, packet) do
@@ -36,32 +34,33 @@ defmodule Baud.Transport do
     Sniff.close(nid) |> trans()
   end
 
-  defp scan_m(nid, count, dl, buf \\ <<>>) do
-    case Sniff.read(nid) do
-      {:ok, ""} ->
-        case millis() >= dl do
-          true ->
-            {:error, {:timeout, buf}}
+  defp scann(nid, count, dl) do
+    Stream.iterate(0, &(&1 + 1))
+    |> Enum.reduce_while(<<>>, fn i, buf ->
+      if i > 0, do: :timer.sleep(1)
 
-          false ->
-            :timer.sleep(1)
-            scan_m(nid, count, dl, buf)
-        end
+      case Sniff.read(nid) do
+        {:ok, data} ->
+          buf = buf <> data
 
-      {:ok, data} ->
-        buf = buf <> data
+          case byte_size(buf) >= count do
+            true ->
+              {:halt, {:ok, buf}}
 
-        case byte_size(buf) >= count do
-          true -> {:ok, buf}
-          false -> scan_m(nid, count, dl, buf)
-        end
+            false ->
+              case millis() > dl do
+                true -> {:halt, {:error, {:timeout, buf}}}
+                false -> {:cont, buf}
+              end
+          end
 
-      other ->
-        other
-    end
+        {:er, reason} ->
+          {:halt, {:error, {reason, buf}}}
+      end
+    end)
   end
 
-  defp scan_s(nid) do
+  defp scanp(nid) do
     Stream.iterate(0, &(&1 + 1))
     |> Enum.reduce_while({0, <<>>}, fn i, {count, buf} ->
       if i > 0, do: :timer.sleep(1)
@@ -86,7 +85,7 @@ defmodule Baud.Transport do
           end
 
         {:er, reason} ->
-          {:halt, {{:error, {reason, buf}}}}
+          {:halt, {:error, {reason, buf}}}
       end
     end)
   end
