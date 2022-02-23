@@ -4,11 +4,11 @@ Elixir Serial Port with Modbus RTU.
 
 ## Installation and Usage
 
-  1. Add `baud` to your list of dependencies in `mix.exs`:
+  1. Add [`baud`](https://hex.pm/packages/baud) to your list of dependencies in `mix.exs`:
 
   ```elixir
   def deps do
-    [{:baud, "~> 0.5.7"}]
+    [{:baud, "~> MAJOR.MINOR"}]
   end
   ```
 
@@ -21,48 +21,51 @@ Elixir Serial Port with Modbus RTU.
   3. Interact with your serial port.
 
   ```elixir
-  #this echo sample requires a loopback plug
-  tty = case :os.type() do
-    {:unix, :darwin} -> "/dev/tty.usbserial-FTYHQD9MA"
-    {:unix, :linux} -> "/dev/ttyUSB0"
-    {:win32, :nt} -> "COM5"
-  end
+  # this echo sample requires a loopback plug
+  tty =
+    case :os.type() do
+      {:unix, :darwin} -> "/dev/tty.usbserial-FTYHQD9MA"
+      {:unix, :linux} -> "/dev/ttyUSB0"
+      {:win32, :nt} -> "COM5"
+    end
 
   {:ok, pid} = Baud.start_link(device: tty)
 
-  Baud.write pid, "01234\n56789\n98765\n43210"
-  {:ok, "01234\n"} = Baud.readln pid
-  {:ok, "56789\n"} = Baud.readln pid
-  {:ok, "98765\n"} = Baud.readln pid
-  {:to, "43210"} = Baud.readln pid
+  Baud.write(pid, "01234\n56789\n98765\n43210")
+  {:ok, "01234\n"} = Baud.readln(pid)
+  {:ok, "56789\n"} = Baud.readln(pid)
+  {:ok, "98765\n"} = Baud.readln(pid)
+  {:to, "43210"} = Baud.readln(pid)
 
-  Baud.write pid, "01234\r56789\r98765\r43210"
-  {:ok, "01234\r"} = Baud.readcr pid
-  {:ok, "56789\r"} = Baud.readcr pid
-  {:ok, "98765\r"} = Baud.readcr pid
-  {:to, "43210"} = Baud.readcr pid
+  Baud.write(pid, "01234\r56789\r98765\r43210")
+  {:ok, "01234\r"} = Baud.readcr(pid)
+  {:ok, "56789\r"} = Baud.readcr(pid)
+  {:ok, "98765\r"} = Baud.readcr(pid)
+  {:to, "43210"} = Baud.readcr(pid)
 
-  Baud.write pid, "01234\n56789\n98765\n43210"
-  {:ok, "01234\n"} = Baud.readn pid, 6
-  {:ok, "56789\n"} = Baud.readn pid, 6
-  {:ok, "98765\n"} = Baud.readn pid, 6
-  {:to, "43210"} = Baud.readn pid, 6
-  {:ok, ""} = Baud.readn pid, 0
+  Baud.write(pid, "01234\n56789\n98765\n43210")
+  {:ok, "01234\n"} = Baud.readn(pid, 6)
+  {:ok, "56789\n"} = Baud.readn(pid, 6)
+  {:ok, "98765\n"} = Baud.readn(pid, 6)
+  {:to, "43210"} = Baud.readn(pid, 6)
+  {:ok, ""} = Baud.readn(pid, 0)
 
-  Baud.write pid, "01234\n"
-  Baud.write pid, "56789\n"
-  Baud.write pid, "98765\n"
-  Baud.write pid, "43210"
-  :timer.sleep 100
-  {:ok, "01234\n56789\n98765\n43210"} = Baud.readall pid
+  Baud.write(pid, "01234\n")
+  Baud.write(pid, "56789\n")
+  Baud.write(pid, "98765\n")
+  Baud.write(pid, "43210")
+  :timer.sleep(100)
+  {:ok, "01234\n56789\n98765\n43210"} = Baud.readall(pid)
+
+  Baud.stop(pid)
   ```
 
   4. Connect the RTU master to the testing RTU slave:
 
   ```elixir    
   # run with: mix slave
-  alias Modbus.Rtu.Slave
-  alias Modbus.Rtu.Master
+  alias Baud.Slave
+  alias Baud.Master
 
   tty0 =
     case :os.type() do
@@ -90,24 +93,27 @@ Elixir Serial Port with Modbus RTU.
     }
   }
 
-  {:ok, _} = Slave.start_link(model: model, device: tty0)
-  {:ok, mpid} = Master.start_link(device: tty1)
+  {:ok, slave} = Slave.start_link(model: model, device: tty0, speed: 115_200)
+  {:ok, master} = Master.start_link(device: tty1, speed: 115_200)
 
   # read input
-  {:ok, [0, 1]} = Master.exec(mpid, {:ri, 0x50, 0x5354, 2})
+  {:ok, [0, 1]} = Master.exec(master, {:ri, 0x50, 0x5354, 2})
   # read input registers
-  {:ok, [0x6364, 0x6566]} = Master.exec(mpid, {:rir, 0x50, 0x5859, 2})
+  {:ok, [0x6364, 0x6566]} = Master.exec(master, {:rir, 0x50, 0x5859, 2})
 
   # toggle coil and read it back
-  :ok = Master.exec(mpid, {:fc, 0x50, 0x5152, 0})
-  {:ok, [0]} = Master.exec(mpid, {:rc, 0x50, 0x5152, 1})
-  :ok = Master.exec(mpid, {:fc, 0x50, 0x5152, 1})
-  {:ok, [1]} = Master.exec(mpid, {:rc, 0x50, 0x5152, 1})
+  :ok = Master.exec(master, {:fc, 0x50, 0x5152, 0})
+  {:ok, [0]} = Master.exec(master, {:rc, 0x50, 0x5152, 1})
+  :ok = Master.exec(master, {:fc, 0x50, 0x5152, 1})
+  {:ok, [1]} = Master.exec(master, {:rc, 0x50, 0x5152, 1})
 
   # increment holding register and read it back
-  {:ok, [0x6162]} = Master.exec(mpid, {:rhr, 0x50, 0x5657, 1})
-  :ok = Master.exec(mpid, {:phr, 0x50, 0x5657, 0x6163})
-  {:ok, [0x6163]} = Master.exec(mpid, {:rhr, 0x50, 0x5657, 1})
+  {:ok, [0x6162]} = Master.exec(master, {:rhr, 0x50, 0x5657, 1})
+  :ok = Master.exec(master, {:phr, 0x50, 0x5657, 0x6163})
+  {:ok, [0x6163]} = Master.exec(master, {:rhr, 0x50, 0x5657, 1})
+
+  :ok = Master.stop(master)
+  :ok = Slave.stop(slave)
   ```
 
 ## Windows
@@ -131,6 +137,10 @@ Give yourself access to serial ports with `sudo dseditgroup -o edit -a samuel -t
 Future
 
 - [ ] Remote compile mix task to Linux & Windows
+
+0.6.0
+
+- [x] Using now the transport and protocol behaviors defined in modbus package
 
 0.5.7
 

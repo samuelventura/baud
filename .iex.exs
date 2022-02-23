@@ -1,2 +1,14 @@
-alias Modbus.Rtu.Master
-alias Baud.Enum
+alias Modbus.Model
+alias Modbus.Shared
+alias Modbus.Protocol
+alias Modbus.Transport
+alias Modbus.Request
+alias Modbus.Response
+alias Modbus.Rtu
+alias Modbus.Tcp
+alias Modbus.Crc
+alias Modbus.Utils
+alias Modbus.Float
+alias Modbus.Echo
+alias Baud.Master
+alias Baud.Slave

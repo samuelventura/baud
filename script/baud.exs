@@ -33,3 +33,5 @@ Baud.write(pid, "98765\n")
 Baud.write(pid, "43210")
 :timer.sleep(100)
 {:ok, "01234\n56789\n98765\n43210"} = Baud.readall(pid)
+
+Baud.stop(pid)

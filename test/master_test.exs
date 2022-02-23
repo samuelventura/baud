@@ -1,9 +1,11 @@
 defmodule Baud.MasterTest do
   use ExUnit.Case
   alias Baud.TTY
+  alias Baud.Master
+  alias Modbus.Request
   alias Modbus.Model
-  alias Modbus.Rtu.Master
-  alias Modbus.Rtu
+  alias Modbus.Rtu.Protocol
+  alias Modbus.Rtu.Protocol.Wrapper
 
   test "master test" do
     tty0 = TTY.tty0()
@@ -269,44 +271,44 @@ defmodule Baud.MasterTest do
 
   defp pp1(pid0, pid1, cmd, req, res, val, state) do
     spawn(fn ->
-      length = Rtu.req_len(cmd)
+      length = Request.length(cmd) + 2
       {:ok, rtu_req} = Baud.readn(pid1, length)
-      ^req = Rtu.unwrap(rtu_req)
-      ^rtu_req = Rtu.wrap(req)
-      ^cmd = Rtu.parse_req(rtu_req)
+      ^req = Wrapper.unwrap(rtu_req)
+      ^rtu_req = Wrapper.wrap(req)
+      {^cmd, nil} = Protocol.parse_req(rtu_req)
 
       case val do
         nil -> {:ok, ^state} = Model.apply(state, cmd)
         _ -> {:ok, ^state, ^val} = Model.apply(state, cmd)
       end
 
-      rtu_res = Rtu.pack_res(cmd, val)
-      ^res = Rtu.unwrap(rtu_res)
-      ^rtu_res = Rtu.wrap(res)
+      rtu_res = Protocol.pack_res(cmd, val)
+      ^res = Wrapper.unwrap(rtu_res)
+      ^rtu_res = Wrapper.wrap(res)
       Baud.write(pid1, rtu_res)
     end)
 
     case val do
-      nil -> :ok = Modbus.Rtu.Master.exec(pid0, cmd)
-      _ -> {:ok, ^val} = Modbus.Rtu.Master.exec(pid0, cmd)
+      nil -> :ok = Master.exec(pid0, cmd)
+      _ -> {:ok, ^val} = Master.exec(pid0, cmd)
     end
   end
 
   defp pp2(pid0, pid1, cmd, req, res, state, state2) do
     spawn(fn ->
-      length = Rtu.req_len(cmd)
+      length = Request.length(cmd) + 2
       result = Baud.readn(pid1, length, 800)
       {:ok, rtu_req} = result
-      ^req = Rtu.unwrap(rtu_req)
-      ^rtu_req = Rtu.wrap(req)
-      ^cmd = Rtu.parse_req(rtu_req)
+      ^req = Wrapper.unwrap(rtu_req)
+      ^rtu_req = Wrapper.wrap(req)
+      {^cmd, nil} = Protocol.parse_req(rtu_req)
       {:ok, ^state2} = Model.apply(state, cmd)
-      rtu_res = Rtu.pack_res(cmd, nil)
-      ^res = Rtu.unwrap(rtu_res)
-      ^rtu_res = Rtu.wrap(res)
+      rtu_res = Protocol.pack_res(cmd, nil)
+      ^res = Wrapper.unwrap(rtu_res)
+      ^rtu_res = Wrapper.wrap(res)
       Baud.write(pid1, rtu_res)
     end)
 
-    :ok = Modbus.Rtu.Master.exec(pid0, cmd)
+    :ok = Master.exec(pid0, cmd)
   end
 end

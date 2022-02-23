@@ -4,8 +4,8 @@ defmodule Modbus.SlaveTest do
 
   test "test master and slave interaction" do
     # run with: mix slave
-    alias Modbus.Rtu.Slave
-    alias Modbus.Rtu.Master
+    alias Baud.Slave
+    alias Baud.Master
 
     tty0 = TTY.tty0()
     tty1 = TTY.tty1()
