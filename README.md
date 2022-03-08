@@ -116,19 +116,35 @@ Elixir Serial Port with Modbus RTU.
   :ok = Slave.stop(slave)
   ```
 
-## Windows
+## Testing
+
+```bash
+# test with socat ttys
+./test.sh
+# test with custom ttys (null modem)
+export TTY0="/dev/ttyUSB0"
+export TTY1="/dev/ttyUSB1"
+mix test
+#in Windows
+#requires COM98/COM99 com0com ports
+test.bat
+```
+
+## Development
+
+### Windows
 
 Install `Visual C++ 2015 Build Tools` by one of the following methods:
   - Download and install [visualcppbuildtools_full.exe](http://landinghub.visualstudio.com/visual-cpp-build-tools)
   - Thru [Chocolatey](https://chocolatey.org/) `choco install VisualCppBuildTools`.
 
-From the Windows run command launch `cmd /K c:\Users\samuel\Documents\github\baud\setenv.bat` adjusting your code location accordingly.
+From the Windows run command launch `cmd /K c:\Users\samuel\Desktop\baud\setenv.bat` adjusting your code location accordingly.
 
-## Ubuntu
+### Ubuntu
 
 Give yourself access to serial ports with `sudo gpasswd -s samuel dialout`. Follow the official Elixir installation instructions and install `build-essential erlang-dev` as well.
 
-## MacOS
+### MacOS
 
 Give yourself access to serial ports with `sudo dseditgroup -o edit -a samuel -t user wheel`.
 
@@ -137,6 +153,10 @@ Give yourself access to serial ports with `sudo dseditgroup -o edit -a samuel -t
 Future
 
 - [ ] Remote compile mix task to Linux & Windows
+
+0.6.1
+
+- [x] Added test.bat for Windows com0com ports
 
 0.6.0
 
