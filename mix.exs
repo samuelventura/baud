@@ -4,7 +4,7 @@ defmodule Baud.Mixfile do
   def project do
     [
       app: :baud,
-      version: "0.6.0",
+      version: "0.6.1",
       elixir: "~> 1.3",
       compilers: Mix.compilers(),
       build_embedded: Mix.env() == :prod,
@@ -24,7 +24,9 @@ defmodule Baud.Mixfile do
 
   defp deps do
     [
-      {:sniff, "~> 0.1.7"},
+      # {:sniff, "~> 0.1.8"},
+      # {:sniff, git: "https://github.com/samuelventura/sniff.git", tag: "0.1.8"},
+      {:sniff, path: "../sniff"},
       {:modbus, "~> 0.4.0"},
       # {:modbus, git: "https://github.com/samuelventura/modbus.git", tag: "0.4.0"},
       # {:modbus, path: "../modbus"},

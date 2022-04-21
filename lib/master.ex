@@ -71,7 +71,7 @@ defmodule Baud.Master do
     device: nil,        #serial port name: "COM1", "/dev/ttyUSB0", "/dev/tty.usbserial-FTYHQD9MA"
     speed: 9600,        #either 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200
                         #win32 adds 14400, 128000, 256000
-    config: "8N1",      #either "8N1", "7E1", "7O1"
+    config: "8N1",      #any config combination {8,7}{N,E,O}{1,2}
   ]
   ```
 
